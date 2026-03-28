@@ -71,7 +71,6 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-8">#</TableHead>
               <TableHead>Unit</TableHead>
               <TableHead>Variant</TableHead>
               <TableHead className="text-right">Tons</TableHead>
@@ -92,7 +91,6 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
                     className="cursor-pointer hover:bg-accent/50"
                     onClick={() => setExpandedSlug(isExpanded ? null : entry.unit.slug)}
                   >
-                    <TableCell className="font-mono text-muted-foreground">{i + 1}</TableCell>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
@@ -113,7 +111,7 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
                   </TableRow>
                   {isExpanded && (
                     <TableRow key={`${entry.unit.slug}-detail`}>
-                      <TableCell colSpan={8} className="p-0 bg-muted/30">
+                      <TableCell colSpan={7} className="p-0 bg-muted/30">
                         <MechDetailCard slug={entry.unit.slug} />
                       </TableCell>
                     </TableRow>
@@ -124,7 +122,6 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell />
               <TableCell className="font-semibold">TOTAL</TableCell>
               <TableCell />
               <TableCell className="text-right font-mono font-semibold">{Math.floor(roster.totalTonnage)}</TableCell>
