@@ -29,8 +29,8 @@ program
   .option('--list-eras', 'Show available eras')
   .option('--list-factions', 'Show available factions')
   .option('--mission <type>', `Mission type: ${MISSIONS.join(', ')}`)
-  .option('--bv <number>', 'Total BV budget', parseInt)
-  .option('--count <number>', 'Number of mechs', parseInt)
+  .option('--bv <number>', 'Total BV budget', (v: string) => parseInt(v, 10))
+  .option('--count <number>', 'Number of mechs', (v: string) => parseInt(v, 10))
   .option('--era <era>', `Era: ${ERAS.join(', ')}`)
   .option('--faction-type <type>', `Faction type: ${FACTION_TYPES.join(', ')}`)
   .option('--faction <slug>', 'Specific faction slug (e.g. davion, clan-wolf)')
@@ -38,8 +38,8 @@ program
   .option('--rules-level <level>', `Max rules level (default: STANDARD): ${RULES_LEVELS.join(', ')}`, 'STANDARD')
   .option('--pilot <g/p>', 'Fixed pilot skill for all mechs (e.g. 3/4). Disables auto-assignment.')
   .option('--no-auto-pilots', 'Disable auto pilot skill assignment (all pilots stay at 4/5)')
-  .option('--seed <number>', 'Random seed for reproducible rosters', parseInt)
-  .option('--variants <number>', 'Generate N roster variants (default: 1, max: 10)', parseInt, 1)
+  .option('--seed <number>', 'Random seed for reproducible rosters', (v: string) => parseInt(v, 10))
+  .option('--variants <number>', 'Generate N roster variants (default: 1, max: 10)', (v: string) => parseInt(v, 10), 1)
   .action(run);
 
 async function run(opts: Record<string, unknown>) {
