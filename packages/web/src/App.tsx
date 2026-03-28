@@ -140,7 +140,7 @@ export function App() {
                 <CollectionList
                   collections={collections}
                   byType={byType}
-                  onCreate={create}
+                  onCreate={(name, type) => { const c = create(name, type); setSelectedCollection(c) }}
                   onSelect={setSelectedCollection}
                   selectedId={currentCollection?.id}
                 />
