@@ -18,6 +18,13 @@ const WEIGHT_CLASS_COLORS: Record<string, string> = {
   ASSAULT: 'text-red-400',
 }
 
+const WEIGHT_CLASS_BAR: Record<string, string> = {
+  LIGHT: 'bg-blue-500',
+  MEDIUM: 'bg-green-500',
+  HEAVY: 'bg-amber-500',
+  ASSAULT: 'bg-red-500',
+}
+
 interface CollectionEditorProps {
   collection: Collection
   onRemoveEntry: (index: number) => void
@@ -29,14 +36,44 @@ interface CollectionEditorProps {
   onDelete: () => void
 }
 
+function chassisName(entry: CollectionEntry): string {
+  const full = entry.unitRef.fullName
+  const variant = entry.unitRef.variant
+  return variant ? full.replace(variant, '').replace(/\s+$/, '') : full
+}
+
+interface ChassisGroup {
+  name: string
+  tonnage: number
+  count: number
+  indices: number[]
+}
+
+function groupByChassis(entries: CollectionEntry[]): ChassisGroup[] {
+  const groups = new Map<string, ChassisGroup>()
+  for (let i = 0; i < entries.length; i++) {
+    const name = chassisName(entries[i])
+    const existing = groups.get(name)
+    if (existing) {
+      existing.count++
+      existing.indices.push(i)
+    } else {
+      groups.set(name, { name, tonnage: entries[i].unitRef.tonnage, count: 1, indices: [i] })
+    }
+  }
+  return [...groups.values()]
+}
+
 export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onBrowseMechs, onToggleChassisProxy, onRename, onChangeType, onDelete }: CollectionEditorProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+  const isProxy = collection.chassisProxy && collection.collectionType === 'mech_collection'
   const colSpan = collection.collectionType === 'roster' ? 7 : 5
   const totalBv = collection.entries.reduce((sum, e) => sum + e.unitRef.bv, 0)
   const totalAdjBv = collection.collectionType === 'roster'
     ? collection.entries.reduce((sum, e) => sum + adjustedBv(e.unitRef.bv, e.gunnery ?? 4, e.piloting ?? 5), 0)
     : totalBv
   const totalTonnage = collection.entries.reduce((sum, e) => sum + e.unitRef.tonnage, 0)
+  const chassisGroups = isProxy ? groupByChassis(collection.entries) : null
 
   return (
     <div className="space-y-4">
@@ -99,7 +136,59 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
         <p className="text-sm text-muted-foreground text-center py-8">
           No mechs in this collection. Click "Add Mechs" to browse the full mech list.
         </p>
+      ) : isProxy && chassisGroups ? (
+        /* Chassis proxy view: grouped by chassis */
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Chassis</TableHead>
+                <TableHead className="text-right">Tons</TableHead>
+                <TableHead className="text-center">Minis</TableHead>
+                <TableHead className="w-16" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {chassisGroups.map(group => {
+                let wc: string
+                try { wc = weightClassFromTonnage(group.tonnage) } catch { wc = 'MEDIUM' }
+                return (
+                  <TableRow key={group.name}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
+                        {group.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{Math.floor(group.tonnage)}</TableCell>
+                    <TableCell className="text-center font-mono">
+                      {group.count > 1 ? `x${group.count}` : '1'}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm" variant="ghost"
+                        className="h-7 px-2 text-xs text-destructive"
+                        onClick={() => onRemoveEntry(group.indices[group.indices.length - 1])}
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="font-semibold">{chassisGroups.length} chassis</TableCell>
+                <TableCell />
+                <TableCell className="text-center font-mono font-semibold">{collection.entries.length} minis</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
       ) : (
+        /* Normal variant view */
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
