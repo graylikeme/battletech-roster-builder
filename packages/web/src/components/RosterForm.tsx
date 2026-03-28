@@ -1,6 +1,6 @@
 import {
-  MISSIONS, FACTION_TYPES, TECH_BASES, MISSION_PROFILES,
-  type Mission, type Era, type FactionType, type TechBase,
+  MISSIONS, FACTION_TYPES, TECH_BASES, RULES_LEVELS, MISSION_PROFILES,
+  type Mission, type Era, type FactionType, type TechBase, type RulesLevel,
 } from '@bt-roster/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -167,6 +167,19 @@ export function RosterForm({ form, setField, isValid, eras, factionsByType, coll
                 <SelectItem value="">Any</SelectItem>
                 {TECH_BASES.map(tb => (
                   <SelectItem key={tb} value={tb}>{tb.replace(/_/g, ' ')}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Rules Level */}
+          <div className="space-y-2">
+            <Label>Max Rules Level</Label>
+            <Select value={form.rulesLevel} onValueChange={v => setField('rulesLevel', (v ?? 'STANDARD') as RulesLevel)}>
+              <SelectTrigger>{form.rulesLevel}</SelectTrigger>
+              <SelectContent>
+                {RULES_LEVELS.map(rl => (
+                  <SelectItem key={rl} value={rl}>{rl}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
