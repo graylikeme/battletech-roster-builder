@@ -81,7 +81,7 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {roster.entries.map((entry, i) => {
+            {roster.entries.map((entry, _i) => {
               const wc = weightClassFromTonnage(entry.unit.tonnage)
               const isExpanded = expandedSlug === entry.unit.slug
               return (
