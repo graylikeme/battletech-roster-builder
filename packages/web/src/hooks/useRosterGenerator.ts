@@ -37,21 +37,27 @@ export function useRosterGenerator() {
           return
         }
         if (collection.chassisProxy) {
-          // Expand each entry to all variants of its chassis
+          // Expand each entry to all variants of its chassis.
+          // Count entries per chassis — 1 mini = 1 pick from that chassis's variants.
           setProgress({ page: 0, fetched: 0, total: 'Expanding chassis variants...' })
 
-          const chassisSlugs = new Set<string>()
+          // Map each entry to its chassis slug and count per chassis
+          const chassisCounts = new Map<string, number>()
           for (const entry of collection.entries) {
             const cs = await fetchUnitChassisSlug(entry.unitRef.slug)
-            if (cs) chassisSlugs.add(cs)
+            if (cs) chassisCounts.set(cs, (chassisCounts.get(cs) ?? 0) + 1)
           }
 
-          const allVariants = new Map<string, Unit>()
-          for (const cs of chassisSlugs) {
+          // Fetch variants for each chassis, add N copies for N minis
+          const variantsByChassisCache = new Map<string, Unit[]>()
+          units = []
+          for (const [cs, count] of chassisCounts) {
             const variants = await fetchChassisVariants(cs)
-            for (const v of variants) allVariants.set(v.slug, v)
+            variantsByChassisCache.set(cs, variants)
+            for (let i = 0; i < count; i++) {
+              units.push(...variants.map(v => ({ ...v }))) // fresh copies so splice works
+            }
           }
-          units = [...allVariants.values()]
         } else {
           // Use entries as-is
           units = collection.entries.map(e => ({
