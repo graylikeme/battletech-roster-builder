@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { weightClassFromTonnage, adjustedBv } from '@bt-roster/core'
 import type { Collection, CollectionEntry } from '@/services/collections'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { MechDetailCard } from './MechDetailCard'
 
 const WEIGHT_CLASS_COLORS: Record<string, string> = {
   LIGHT: 'text-blue-400',
@@ -28,6 +30,8 @@ interface CollectionEditorProps {
 }
 
 export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onBrowseMechs, onToggleChassisProxy, onRename, onChangeType, onDelete }: CollectionEditorProps) {
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+  const colSpan = collection.collectionType === 'roster' ? 7 : 5
   const totalBv = collection.entries.reduce((sum, e) => sum + e.unitRef.bv, 0)
   const totalAdjBv = collection.collectionType === 'roster'
     ? collection.entries.reduce((sum, e) => sum + adjustedBv(e.unitRef.bv, e.gunnery ?? 4, e.piloting ?? 5), 0)
@@ -117,9 +121,18 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
               {collection.entries.map((entry, i) => {
                 let wc: string
                 try { wc = weightClassFromTonnage(entry.unitRef.tonnage) } catch { wc = 'MEDIUM' }
+                const isExpanded = expandedSlug === entry.unitRef.slug
                 return (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{entry.unitRef.fullName}</TableCell>
+                <>
+                <TableRow
+                  key={i}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => setExpandedSlug(isExpanded ? null : entry.unitRef.slug)}
+                >
+                  <TableCell className="font-medium">
+                    {entry.unitRef.fullName}
+                    <span className="ml-1 text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                  </TableCell>
                   <TableCell className="text-right font-mono">{Math.floor(entry.unitRef.tonnage)}</TableCell>
                   <TableCell className="text-right font-mono">{entry.unitRef.bv}</TableCell>
                   <TableCell>
@@ -135,6 +148,7 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                             type="number" min={0} max={8}
                             className="w-10 h-7 text-center font-mono text-xs p-0"
                             value={entry.gunnery ?? 4}
+                            onClick={e => e.stopPropagation()}
                             onChange={e => onUpdateEntry(i, { gunnery: parseInt(e.target.value, 10) || 4 })}
                           />
                           <span className="text-muted-foreground">/</span>
@@ -142,6 +156,7 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                             type="number" min={0} max={8}
                             className="w-10 h-7 text-center font-mono text-xs p-0"
                             value={entry.piloting ?? 5}
+                            onClick={e => e.stopPropagation()}
                             onChange={e => onUpdateEntry(i, { piloting: parseInt(e.target.value, 10) || 5 })}
                           />
                         </div>
@@ -155,12 +170,20 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                     <Button
                       size="sm" variant="ghost"
                       className="h-7 px-2 text-xs text-destructive"
-                      onClick={() => onRemoveEntry(i)}
+                      onClick={e => { e.stopPropagation(); onRemoveEntry(i) }}
                     >
                       Remove
                     </Button>
                   </TableCell>
                 </TableRow>
+                {isExpanded && (
+                  <TableRow key={`${entry.unitRef.slug}-detail`}>
+                    <TableCell colSpan={colSpan} className="p-0 bg-muted/30">
+                      <MechDetailCard slug={entry.unitRef.slug} />
+                    </TableCell>
+                  </TableRow>
+                )}
+                </>
                 )
               })}
             </TableBody>
