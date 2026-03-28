@@ -40,26 +40,30 @@ export function useRosterGenerator() {
 
         if (collection.chassisProxy) {
           // Expand each entry to all variants of its chassis.
-          // Count entries per chassis — 1 mini = 1 pick from that chassis's variants.
-          setProgress({ page: 0, fetched: 0, total: 'Expanding chassis variants...' })
+          const totalEntries = collection.entries.length
+          setProgress({ page: 1, fetched: 0, total: totalEntries })
 
           // Map each entry to its chassis slug and count per chassis
           const chassisCounts = new Map<string, number>()
-          for (const entry of collection.entries) {
-            const cs = await fetchUnitChassisSlug(entry.unitRef.slug)
+          for (let ei = 0; ei < collection.entries.length; ei++) {
+            const cs = await fetchUnitChassisSlug(collection.entries[ei].unitRef.slug)
             if (cs) chassisCounts.set(cs, (chassisCounts.get(cs) ?? 0) + 1)
+            setProgress({ page: 1, fetched: ei + 1, total: totalEntries })
           }
 
           // Fetch variants for each chassis, add N copies for N minis
-          // Build chassisGroups map: unit slug → chassis slug
           chassisGroupsMap = new Map<string, string>()
           units = []
+          let chassisDone = 0
+          const chassisTotal = chassisCounts.size
           for (const [cs, count] of chassisCounts) {
             const variants = await fetchChassisVariants(cs)
             for (const v of variants) chassisGroupsMap.set(v.slug, cs)
             for (let i = 0; i < count; i++) {
               units.push(...variants.map(v => ({ ...v })))
             }
+            chassisDone++
+            setProgress({ page: 2, fetched: chassisDone, total: chassisTotal })
           }
         } else {
           // Use entries as-is

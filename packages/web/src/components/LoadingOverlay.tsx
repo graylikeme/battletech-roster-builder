@@ -6,11 +6,18 @@ interface LoadingOverlayProps {
 }
 
 export function LoadingOverlay({ status, progress }: LoadingOverlayProps) {
-  const label = status === 'fetching'
-    ? progress
-      ? `Fetching units... page ${progress.page} (${progress.fetched}/${progress.total})`
-      : 'Fetching units...'
-    : 'Generating roster...'
+  let label: string
+  if (status === 'generating') {
+    label = 'Generating roster...'
+  } else if (!progress) {
+    label = 'Fetching units...'
+  } else if (progress.page === 1) {
+    label = `Resolving chassis... ${progress.fetched}/${progress.total}`
+  } else if (progress.page === 2) {
+    label = `Loading variants... ${progress.fetched}/${progress.total}`
+  } else {
+    label = `Fetching units... page ${progress.page} (${progress.fetched}/${progress.total})`
+  }
 
   const pct = status === 'fetching' && progress && typeof progress.total === 'number' && progress.total > 0
     ? Math.round(progress.fetched / progress.total * 100)
