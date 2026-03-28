@@ -119,15 +119,8 @@ export function App() {
                 {status === 'error' && error && <ErrorBanner message={error} />}
 
                 {status === 'done' && rosters.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex justify-end">
-                      <Button size="sm" variant="outline" onClick={() => setSaveRoster(rosters[0])}>
-                        Save Roster
-                      </Button>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card p-5">
-                      <RosterVariants rosters={rosters} requestedCount={form.count} />
-                    </div>
+                  <div className="rounded-lg border border-border bg-card p-5">
+                    <RosterVariants rosters={rosters} requestedCount={form.count} onSave={() => setSaveRoster(rosters[0])} />
                   </div>
                 )}
 

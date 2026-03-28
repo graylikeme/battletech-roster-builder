@@ -5,13 +5,14 @@ import { RosterDisplay } from './RosterDisplay'
 interface RosterVariantsProps {
   rosters: Roster[]
   requestedCount?: number
+  onSave?: () => void
 }
 
-export function RosterVariants({ rosters, requestedCount }: RosterVariantsProps) {
+export function RosterVariants({ rosters, requestedCount, onSave }: RosterVariantsProps) {
   if (rosters.length === 0) return null
 
   if (rosters.length === 1) {
-    return <RosterDisplay roster={rosters[0]} requestedCount={requestedCount} />
+    return <RosterDisplay roster={rosters[0]} requestedCount={requestedCount} onSave={onSave} />
   }
 
   return (
@@ -25,7 +26,7 @@ export function RosterVariants({ rosters, requestedCount }: RosterVariantsProps)
       </TabsList>
       {rosters.map((roster, i) => (
         <TabsContent key={i} value={String(i)}>
-          <RosterDisplay roster={roster} requestedCount={requestedCount} />
+          <RosterDisplay roster={roster} requestedCount={requestedCount} onSave={onSave} />
         </TabsContent>
       ))}
     </Tabs>

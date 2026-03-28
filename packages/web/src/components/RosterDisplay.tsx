@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { weightClassFromTonnage, MISSION_PROFILES, type Roster } from '@bt-roster/core'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
@@ -23,9 +24,10 @@ const WEIGHT_CLASS_BG: Record<string, string> = {
 interface RosterDisplayProps {
   roster: Roster
   requestedCount?: number
+  onSave?: () => void
 }
 
-export function RosterDisplay({ roster, requestedCount }: RosterDisplayProps) {
+export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
   const profile = MISSION_PROFILES[roster.mission]
   const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
@@ -35,7 +37,10 @@ export function RosterDisplay({ roster, requestedCount }: RosterDisplayProps) {
     <div className="space-y-3">
       {/* Header */}
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold">{profile.name}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">{profile.name}</h3>
+          {onSave && <Button size="sm" onClick={onSave}>Save Roster</Button>}
+        </div>
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <span>{eraLabel}</span>
           {roster.factionType && (
