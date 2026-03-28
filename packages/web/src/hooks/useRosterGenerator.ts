@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import {
   fetchUnits, generateRoster,
-  effectiveRulesLevel, computeBvFilterBounds,
+  effectiveRulesLevel, computeBvFilterBounds, allowedRulesLevels,
   fetchUnitChassisSlug, fetchChassisVariants,
   type Roster, type FetchProgress, type UnitFilters, type Unit,
 } from '@bt-roster/core'
@@ -41,6 +41,8 @@ export function useRosterGenerator() {
     try {
       let units: Unit[]
       let chassisGroupsMap: Map<string, string> | undefined
+      const techBase = form.techBase || undefined
+      const { rulesLevel } = effectiveRulesLevel(techBase, form.rulesLevel)
 
       if (form.unitSource === 'collection') {
         // Use collection as unit source — no API fetch needed
@@ -71,7 +73,7 @@ export function useRosterGenerator() {
           let chassisDone = 0
           const chassisTotal = chassisCounts.size
           for (const [cs, count] of chassisCounts) {
-            const variants = await fetchChassisVariants(cs)
+            const variants = await fetchChassisVariants(cs, rulesLevel)
             for (const v of variants) chassisGroupsMap.set(v.slug, cs)
             for (let i = 0; i < count; i++) {
               units.push(...variants.map(v => ({ ...v })))
@@ -89,22 +91,21 @@ export function useRosterGenerator() {
             bv: e.unitRef.bv,
             role: e.unitRef.role,
             techBase: e.unitRef.techBase,
-            rulesLevel: '',
+            rulesLevel: e.unitRef.rulesLevel ?? '',
           }) as Unit)
         }
 
         // Apply client-side filters
         const { bvMin, bvMax } = computeBvFilterBounds(form.bv, form.count)
-        const techBase = form.techBase || undefined
+        const allowedLevels = new Set(allowedRulesLevels(rulesLevel))
         units = units.filter(u => {
           if (techBase && u.techBase.toLowerCase() !== techBase.toLowerCase()) return false
           if (u.bv < bvMin || u.bv > bvMax) return false
+          if (u.rulesLevel && !allowedLevels.has(u.rulesLevel.toLowerCase())) return false
           return true
         })
       } else {
         // Fetch from API
-        const techBase = form.techBase || undefined
-        const { rulesLevel } = effectiveRulesLevel(techBase, form.rulesLevel)
         const { bvMin, bvMax } = computeBvFilterBounds(form.bv, form.count)
 
         const filters: UnitFilters = {

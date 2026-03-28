@@ -12,6 +12,7 @@ export interface UnitRef {
   bv: number
   role: string | null
   techBase: string
+  rulesLevel?: string
 }
 
 export interface CollectionEntry {

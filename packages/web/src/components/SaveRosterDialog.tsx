@@ -29,6 +29,7 @@ export function rosterToEntries(roster: Roster): CollectionEntry[] {
       bv: e.unit.bv,
       role: e.unit.role,
       techBase: e.unit.techBase,
+      rulesLevel: e.unit.rulesLevel,
     } satisfies UnitRef,
     gunnery: e.gunnery,
     piloting: e.piloting,
