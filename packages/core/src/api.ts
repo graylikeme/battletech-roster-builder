@@ -1,6 +1,10 @@
 import { allowedRulesLevels, type Unit, type UnitFilters, type FactionType } from './models.js';
 
-const API_URL = 'https://api.battledroids.ru/graphql';
+let apiUrl = 'https://api.battledroids.ru/graphql';
+
+export function setApiUrl(url: string): void { apiUrl = url; }
+export function getApiUrl(): string { return apiUrl; }
+
 const PAGE_SIZE = 100;
 
 const UNITS_QUERY = `
@@ -44,7 +48,7 @@ interface GraphQLResponse {
 }
 
 async function executeQuery(query: string, variables: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
-  const resp = await fetch(API_URL, {
+  const resp = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
