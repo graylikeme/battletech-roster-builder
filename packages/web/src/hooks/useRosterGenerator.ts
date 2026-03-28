@@ -10,10 +10,24 @@ import { loadCollections } from '@/services/collections'
 
 export type GeneratorStatus = 'idle' | 'fetching' | 'generating' | 'done' | 'error'
 
+const ROSTERS_KEY = 'bt-last-rosters'
+
+function loadSavedRosters(): { rosters: Roster[]; status: GeneratorStatus } {
+  try {
+    const raw = sessionStorage.getItem(ROSTERS_KEY)
+    if (raw) {
+      const rosters = JSON.parse(raw) as Roster[]
+      if (rosters.length > 0) return { rosters, status: 'done' }
+    }
+  } catch {}
+  return { rosters: [], status: 'idle' }
+}
+
 export function useRosterGenerator() {
-  const [status, setStatus] = useState<GeneratorStatus>('idle')
+  const saved = loadSavedRosters()
+  const [status, setStatus] = useState<GeneratorStatus>(saved.status)
   const [progress, setProgress] = useState<FetchProgress | null>(null)
-  const [rosters, setRosters] = useState<Roster[]>([])
+  const [rosters, setRosters] = useState<Roster[]>(saved.rosters)
   const [error, setError] = useState<string | null>(null)
 
   const generate = useCallback(async (form: FormState) => {
@@ -139,6 +153,7 @@ export function useRosterGenerator() {
 
       setRosters(results)
       setStatus('done')
+      try { sessionStorage.setItem(ROSTERS_KEY, JSON.stringify(results)) } catch {}
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed')
       setStatus('error')

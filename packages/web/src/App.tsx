@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Roster } from '@bt-roster/core'
 import { useReferenceData } from '@/hooks/useReferenceData'
 import { useFormState } from '@/hooks/useFormState'
@@ -27,7 +27,13 @@ export function App() {
   const { status, progress, rosters, error, generate } = useRosterGenerator()
   const { collections, byType, create, save, remove, rename, changeType, addEntry, removeEntry, updateEntry, toggleChassisProxy } = useCollections()
 
-  const [activeTab, setActiveTab] = useState<'generate' | 'collections'>('generate')
+  const [activeTab, setActiveTabState] = useState<'generate' | 'collections'>(() => {
+    return (sessionStorage.getItem('bt-active-tab') as 'generate' | 'collections') ?? 'generate'
+  })
+  const setActiveTab = (tab: 'generate' | 'collections') => {
+    setActiveTabState(tab)
+    sessionStorage.setItem('bt-active-tab', tab)
+  }
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
   const [collectionTypeFilter, setCollectionTypeFilter] = useState<CollectionType | 'all'>('all')
   const [showBrowser, setShowBrowser] = useState(false)

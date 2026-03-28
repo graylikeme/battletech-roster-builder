@@ -1,5 +1,7 @@
-import { useReducer } from 'react'
+import { useReducer, useEffect } from 'react'
 import type { Mission, Era, FactionType, TechBase, RulesLevel } from '@bt-roster/core'
+
+const STORAGE_KEY = 'bt-form-state'
 
 export interface FormState {
   unitSource: 'api' | 'collection'
@@ -23,7 +25,7 @@ type FormAction =
   | { type: 'SET_FIELD'; field: keyof FormState; value: FormState[keyof FormState] }
   | { type: 'RESET' }
 
-const initialState: FormState = {
+const defaultState: FormState = {
   unitSource: 'api',
   collectionId: '',
   mission: '',
@@ -41,19 +43,31 @@ const initialState: FormState = {
   seed: '',
 }
 
+function loadState(): FormState {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    if (raw) return { ...defaultState, ...JSON.parse(raw) }
+  } catch {}
+  return defaultState
+}
+
 function reducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
     case 'SET_FIELD':
       return { ...state, [action.field]: action.value }
     case 'RESET':
-      return initialState
+      return defaultState
     default:
       return state
   }
 }
 
 export function useFormState() {
-  const [form, dispatch] = useReducer(reducer, initialState)
+  const [form, dispatch] = useReducer(reducer, null, loadState)
+
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(form))
+  }, [form])
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     dispatch({ type: 'SET_FIELD', field, value: value as FormState[keyof FormState] })
