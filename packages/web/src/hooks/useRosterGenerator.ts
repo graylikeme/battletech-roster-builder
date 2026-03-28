@@ -26,6 +26,7 @@ export function useRosterGenerator() {
 
     try {
       let units: Unit[]
+      let chassisGroupsMap: Map<string, string> | undefined
 
       if (form.unitSource === 'collection') {
         // Use collection as unit source — no API fetch needed
@@ -36,7 +37,6 @@ export function useRosterGenerator() {
           setStatus('error')
           return
         }
-        let chassisGroupsMap: Map<string, string> | undefined
 
         if (collection.chassisProxy) {
           // Expand each entry to all variants of its chassis.
