@@ -223,16 +223,14 @@ function fillSlot(
     if (candidates.length > 0) return makeEntry(randomChoice(candidates, rng), gunnery, piloting, autoPilots);
   }
 
-  // Last resort: closest to target within allowed weight classes
+  // Last resort: closest to target within allowed weight classes, but never exceed ceiling
   let candidates = pool.filter(u =>
     ubv(u) <= bvCeiling &&
     [...allowedWcs].some(wc => weightClassContains(wc, u.tonnage))
   );
   if (candidates.length === 0) {
-    candidates = pool.filter(u => [...allowedWcs].some(wc => weightClassContains(wc, u.tonnage)));
-  }
-  if (candidates.length === 0) {
-    candidates = [...pool];
+    // Try any weight class but still respect ceiling
+    candidates = pool.filter(u => ubv(u) <= bvCeiling);
   }
   if (candidates.length > 0) {
     candidates.sort((a, b) => Math.abs(ubv(a) - bvTarget) - Math.abs(ubv(b) - bvTarget));
