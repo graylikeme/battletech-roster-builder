@@ -148,7 +148,7 @@ node --import tsx packages/cli/src/cli.ts \
   --tech-base INNER_SPHERE --seed 42
 ```
 
-Using the same seed with the same filters produces identical output every time.
+Using the same seed with the same filters produces identical output every time, on any machine. The unit pool is sorted deterministically before selection, so API response ordering does not affect results.
 
 ## Mission Types
 
@@ -239,7 +239,10 @@ battletech-roster-builder/
         missions.test.ts        # Slot assignment tests
         pilots.test.ts          # Skill multiplier and auto-assignment tests
         generator.test.ts       # End-to-end roster generation tests
-        api.test.ts             # API client tests
+        api.test.ts             # API client tests (mocked fetch)
+    cli/
+      tests/
+        cli.test.ts             # CLI integration tests and regression tests
     cli/                        # @bt-roster/cli -- command-line interface
       src/
         cli.ts                  # Commander.js argument parsing, orchestration
@@ -259,8 +262,11 @@ battletech-roster-builder/
 ### Running Tests
 
 ```bash
-# Run all core tests
+# Run core tests (75 tests)
 npm test
+
+# Run CLI integration tests (30 tests)
+npm -w @bt-roster/cli test
 
 # Run tests in watch mode
 npm -w @bt-roster/core run test:watch
