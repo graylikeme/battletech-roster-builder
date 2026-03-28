@@ -126,7 +126,7 @@ export function App() {
                       </Button>
                     </div>
                     <div className="rounded-lg border border-border bg-card p-5">
-                      <RosterVariants rosters={rosters} />
+                      <RosterVariants rosters={rosters} requestedCount={form.count} />
                     </div>
                   </div>
                 )}

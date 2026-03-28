@@ -22,9 +22,10 @@ const WEIGHT_CLASS_BG: Record<string, string> = {
 
 interface RosterDisplayProps {
   roster: Roster
+  requestedCount?: number
 }
 
-export function RosterDisplay({ roster }: RosterDisplayProps) {
+export function RosterDisplay({ roster, requestedCount }: RosterDisplayProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
   const profile = MISSION_PROFILES[roster.mission]
   const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
@@ -52,6 +53,12 @@ export function RosterDisplay({ roster }: RosterDisplayProps) {
           <span>Used: <span className="font-mono font-semibold">{roster.bvUsed}</span> ({pct}%)</span>
           <span>Remaining: <span className="font-mono font-semibold">{roster.bvRemaining}</span></span>
         </div>
+        {requestedCount && roster.entries.length < requestedCount && (
+          <p className="text-sm text-amber-400">
+            Only {roster.entries.length} of {requestedCount} mechs could be filled.
+            Remaining units in the pool exceed the BV budget. Try increasing BV, reducing count, or adding cheaper mechs to the collection.
+          </p>
+        )}
       </div>
 
       {/* Table */}

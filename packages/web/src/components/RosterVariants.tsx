@@ -4,13 +4,14 @@ import { RosterDisplay } from './RosterDisplay'
 
 interface RosterVariantsProps {
   rosters: Roster[]
+  requestedCount?: number
 }
 
-export function RosterVariants({ rosters }: RosterVariantsProps) {
+export function RosterVariants({ rosters, requestedCount }: RosterVariantsProps) {
   if (rosters.length === 0) return null
 
   if (rosters.length === 1) {
-    return <RosterDisplay roster={rosters[0]} />
+    return <RosterDisplay roster={rosters[0]} requestedCount={requestedCount} />
   }
 
   return (
@@ -24,7 +25,7 @@ export function RosterVariants({ rosters }: RosterVariantsProps) {
       </TabsList>
       {rosters.map((roster, i) => (
         <TabsContent key={i} value={String(i)}>
-          <RosterDisplay roster={roster} />
+          <RosterDisplay roster={roster} requestedCount={requestedCount} />
         </TabsContent>
       ))}
     </Tabs>
