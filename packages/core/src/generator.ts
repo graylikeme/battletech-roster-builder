@@ -43,6 +43,11 @@ export function generateRoster(
 
   const rng = createRng(seed ?? Date.now());
 
+  // Sort units by slug for deterministic ordering across machines.
+  // Without this, different API response ordering would produce
+  // different rosters for the same seed.
+  units = [...units].sort((a, b) => a.slug.localeCompare(b.slug));
+
   // BV function: accounts for pilot skill baseline
   const unitBv = autoPilots
     ? (u: Unit) => { const [g, p] = baselineForTechBase(u.techBase); return adjustedBv(u.bv, g, p); }

@@ -74,6 +74,16 @@ describe('generateRoster', () => {
     expect(slugs1.join(',') === slugs2.join(',')).toBe(false);
   });
 
+  it('same seed produces same roster regardless of input order', () => {
+    const reversed = [...pool].reverse();
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    const r1 = generateRoster(pool, 4, 6000, 'pitched_battle', 'CLAN_INVASION', { seed: 42 });
+    const r2 = generateRoster(reversed, 4, 6000, 'pitched_battle', 'CLAN_INVASION', { seed: 42 });
+    const r3 = generateRoster(shuffled, 4, 6000, 'pitched_battle', 'CLAN_INVASION', { seed: 42 });
+    expect(r1.entries.map(e => e.unit.slug)).toEqual(r2.entries.map(e => e.unit.slug));
+    expect(r1.entries.map(e => e.unit.slug)).toEqual(r3.entries.map(e => e.unit.slug));
+  });
+
   it('defense mission produces no light mechs', () => {
     const roster = generateRoster(pool, 4, 5000, 'defense', 'CLAN_INVASION', { seed: 1 });
     for (const entry of roster.entries) {
