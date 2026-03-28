@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Roster } from '@bt-roster/core'
 import { useReferenceData } from '@/hooks/useReferenceData'
 import { useFormState } from '@/hooks/useFormState'
@@ -25,7 +25,8 @@ export function App() {
   const { eras, factions, factionsByType, loading: refLoading, error: refError } = useReferenceData()
   const { form, setField, isValid } = useFormState()
   const { status, progress, rosters, error, generate } = useRosterGenerator()
-  const { collections, byType, create, save, remove, rename, changeType, addEntry, removeEntry, updateEntry, toggleChassisProxy } = useCollections()
+  const { collections, byType, create, save, replaceAll, remove, rename, changeType, addEntry, removeEntry, updateEntry, toggleChassisProxy } = useCollections()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [activeTab, setActiveTabState] = useState<'generate' | 'collections'>(() => {
     return (sessionStorage.getItem('bt-active-tab') as 'generate' | 'collections') ?? 'generate'
@@ -99,10 +100,54 @@ export function App() {
 
       <main className="max-w-7xl mx-auto p-6">
         <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'generate' | 'collections')}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="generate">Generate Roster</TabsTrigger>
-            <TabsTrigger value="collections">Collections ({collections.length})</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center gap-2 mb-6">
+            <TabsList>
+              <TabsTrigger value="generate">Generate Roster</TabsTrigger>
+              <TabsTrigger value="collections">Collections ({collections.length})</TabsTrigger>
+            </TabsList>
+            {activeTab === 'collections' && (
+              <>
+                <div className="flex-1" />
+                <Button size="sm" variant="outline" onClick={() => {
+                  const json = JSON.stringify(collections, null, 2)
+                  const blob = new Blob([json], { type: 'application/json' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = 'bt-collections.json'
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}>Export All</Button>
+                <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>Import</Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                      try {
+                        const data = JSON.parse(reader.result as string)
+                        if (!Array.isArray(data)) throw new Error('Invalid format')
+                        const count = data.length
+                        if (confirm(`This will replace all your current collections (${collections.length}) with ${count} collections from the file. This cannot be undone. Continue?`)) {
+                          replaceAll(data)
+                          if (data.length > 0) setSelectedCollection(data[0])
+                        }
+                      } catch {
+                        alert('Invalid file format. Expected a JSON array of collections.')
+                      }
+                    }
+                    reader.readAsText(file)
+                    e.target.value = ''
+                  }}
+                />
+              </>
+            )}
+          </div>
 
           {/* Generate Tab */}
           <TabsContent value="generate">

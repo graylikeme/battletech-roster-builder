@@ -66,6 +66,10 @@ function persist(collections: Collection[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(collections))
 }
 
+export function replaceAllCollections(collections: Collection[]): void {
+  persist(collections)
+}
+
 export function saveCollection(collection: Collection): void {
   const all = loadCollections()
   const idx = all.findIndex(c => c.id === collection.id)

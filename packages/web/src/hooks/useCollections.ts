@@ -5,6 +5,7 @@ import {
   deleteCollection as deleteCollectionStorage,
   updateCollection as updateCollectionStorage,
   createCollection,
+  replaceAllCollections,
   type Collection,
   type CollectionType,
   type CollectionEntry,
@@ -77,6 +78,11 @@ export function useCollections() {
     refresh()
   }, [refresh])
 
+  const replaceAll = useCallback((newCollections: Collection[]) => {
+    replaceAllCollections(newCollections)
+    refresh()
+  }, [refresh])
+
   const byType = useCallback((type?: CollectionType) => {
     if (!type) return collections
     return collections.filter(c => c.collectionType === type)
@@ -90,6 +96,7 @@ export function useCollections() {
     rename,
     changeType,
     save,
+    replaceAll,
     addEntry,
     removeEntry,
     updateEntry,
