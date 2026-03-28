@@ -36,6 +36,8 @@ export function useRosterGenerator() {
           setStatus('error')
           return
         }
+        let chassisGroupsMap: Map<string, string> | undefined
+
         if (collection.chassisProxy) {
           // Expand each entry to all variants of its chassis.
           // Count entries per chassis — 1 mini = 1 pick from that chassis's variants.
@@ -49,13 +51,14 @@ export function useRosterGenerator() {
           }
 
           // Fetch variants for each chassis, add N copies for N minis
-          const variantsByChassisCache = new Map<string, Unit[]>()
+          // Build chassisGroups map: unit slug → chassis slug
+          chassisGroupsMap = new Map<string, string>()
           units = []
           for (const [cs, count] of chassisCounts) {
             const variants = await fetchChassisVariants(cs)
-            variantsByChassisCache.set(cs, variants)
+            for (const v of variants) chassisGroupsMap.set(v.slug, cs)
             for (let i = 0; i < count; i++) {
-              units.push(...variants.map(v => ({ ...v }))) // fresh copies so splice works
+              units.push(...variants.map(v => ({ ...v })))
             }
           }
         } else {
@@ -116,13 +119,16 @@ export function useRosterGenerator() {
       const results: Roster[] = []
 
       for (let v = 0; v < numVariants; v++) {
-        const roster = generateRoster(units, form.count, form.bv, form.mission, form.era, {
+        // For chassis proxy, pass fresh copy of units each time (generator mutates pool)
+        const poolForVariant = chassisGroupsMap ? units.map(u => ({ ...u })) : units
+        const roster = generateRoster(poolForVariant, form.count, form.bv, form.mission, form.era, {
           gunnery: form.pilotMode === 'fixed' ? form.gunnery : 4,
           piloting: form.pilotMode === 'fixed' ? form.piloting : 5,
           autoPilots: form.pilotMode === 'auto',
           factionType: form.factionType || undefined,
           factionSlug: form.factionSlug || undefined,
           seed: baseSeed + v,
+          chassisGroups: chassisGroupsMap,
         })
         results.push(roster)
       }

@@ -25,6 +25,9 @@ export interface GenerateOptions {
   factionType?: FactionType;
   factionSlug?: string;
   seed?: number;
+  /** Maps unit slug → chassis group ID. When a unit is picked, all other units
+   *  in the same chassis group are removed from the pool (one "mini" consumed). */
+  chassisGroups?: Map<string, string>;
 }
 
 export function generateRoster(
@@ -35,7 +38,7 @@ export function generateRoster(
   era: Era,
   opts: GenerateOptions = {},
 ): Roster {
-  const { gunnery = 4, piloting = 5, autoPilots = true, factionType, factionSlug, seed } = opts;
+  const { gunnery = 4, piloting = 5, autoPilots = true, factionType, factionSlug, seed, chassisGroups } = opts;
 
   if (units.length < count) {
     throw new Error(`Only ${units.length} units available, but ${count} requested.`);
@@ -98,8 +101,7 @@ export function generateRoster(
     const entry = fillSlot(pool, slot, slotTarget, bvCeiling, gunnery, piloting, autoPilots, rng, allowedWcs, missionRoles);
     if (entry) {
       selected.push(entry);
-      const idx = pool.indexOf(entry.unit);
-      if (idx >= 0) pool.splice(idx, 1);
+      removeFromPool(pool, entry.unit, chassisGroups);
     }
   }
 
@@ -116,7 +118,7 @@ export function generateRoster(
     candidates.sort((a, b) => Math.abs(unitBv(a) - target) - Math.abs(unitBv(b) - target));
     const pick = candidates.length <= 3 ? candidates[0] : randomChoice(candidates.slice(0, 5), rng);
     selected.push(makeEntry(pick, gunnery, piloting, autoPilots));
-    pool.splice(pool.indexOf(pick), 1);
+    removeFromPool(pool, pick, chassisGroups);
   }
 
   // Auto-assign pilot skills
@@ -238,4 +240,29 @@ function fillSlot(
   }
 
   return null;
+}
+
+/** Remove a picked unit from the pool. When chassisGroups is provided,
+ *  removes one complete set of that chassis group's variants
+ *  (consuming one "miniature" of that chassis). */
+function removeFromPool(pool: Unit[], picked: Unit, chassisGroups?: Map<string, string>): void {
+  if (chassisGroups) {
+    const group = chassisGroups.get(picked.slug);
+    if (group) {
+      // Find all indices of variants in this chassis group
+      const indices: number[] = [];
+      for (let i = 0; i < pool.length; i++) {
+        if (chassisGroups.get(pool[i].slug) === group) {
+          indices.push(i);
+        }
+      }
+      // Remove one complete set (reverse order to preserve indices)
+      for (let i = indices.length - 1; i >= 0; i--) {
+        pool.splice(indices[i], 1);
+      }
+      return;
+    }
+  }
+  const idx = pool.indexOf(picked);
+  if (idx >= 0) pool.splice(idx, 1);
 }
