@@ -80,33 +80,26 @@ describe('fetchUnits', () => {
     expect(units[0].slug).toBe('atlas-as7-d');
   });
 
-  it('filters by rules level (STANDARD excludes advanced)', async () => {
+  it('sends rulesLevel to API when maxRulesLevel is set', async () => {
     mockFetch.mockResolvedValueOnce(graphqlResponse(
-      unitsPage([
-        makeUnitNode({ rulesLevel: 'standard' }),
-        makeUnitNode({ slug: 'advanced-mech', rulesLevel: 'advanced' }),
-        makeUnitNode({ slug: 'intro-mech', rulesLevel: 'introductory' }),
-      ])
+      unitsPage([makeUnitNode({ rulesLevel: 'standard' })])
     ));
 
-    const units = await fetchUnits({ maxRulesLevel: 'STANDARD' });
-    expect(units).toHaveLength(2);
-    expect(units.map(u => u.slug)).not.toContain('advanced-mech');
+    await fetchUnits({ maxRulesLevel: 'STANDARD' });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+    expect(body.variables.rulesLevel).toBe('STANDARD');
   });
 
-  it('ADVANCED includes introductory + standard + advanced', async () => {
+  it('does not send rulesLevel when maxRulesLevel is not set', async () => {
     mockFetch.mockResolvedValueOnce(graphqlResponse(
-      unitsPage([
-        makeUnitNode({ rulesLevel: 'introductory' }),
-        makeUnitNode({ slug: 'std', rulesLevel: 'standard' }),
-        makeUnitNode({ slug: 'adv', rulesLevel: 'advanced' }),
-        makeUnitNode({ slug: 'exp', rulesLevel: 'experimental' }),
-      ])
+      unitsPage([makeUnitNode()])
     ));
 
-    const units = await fetchUnits({ maxRulesLevel: 'ADVANCED' });
-    expect(units).toHaveLength(3);
-    expect(units.map(u => u.slug)).not.toContain('exp');
+    await fetchUnits({});
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+    expect(body.variables.rulesLevel).toBeUndefined();
   });
 });
 

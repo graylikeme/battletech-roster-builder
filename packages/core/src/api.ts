@@ -12,14 +12,14 @@ query Units(
   $first: Int, $after: String,
   $eraSlug: EraFilter, $factionTypes: [FactionTypeFilter!],
   $factionSlug: String, $unitType: UnitTypeFilter,
-  $techBase: TechBaseFilter,
+  $techBase: TechBaseFilter, $rulesLevel: RulesLevelFilter,
   $bvMin: Int, $bvMax: Int
 ) {
   units(
     first: $first, after: $after,
     eraSlug: $eraSlug, factionTypes: $factionTypes,
     factionSlug: $factionSlug, unitType: $unitType,
-    techBase: $techBase,
+    techBase: $techBase, rulesLevel: $rulesLevel,
     bvMin: $bvMin, bvMax: $bvMax
   ) {
     pageInfo { hasNextPage endCursor totalCount }
@@ -103,6 +103,7 @@ export async function fetchUnits(
   if (filters.factionSlug) variables.factionSlug = filters.factionSlug;
   if (filters.unitType) variables.unitType = filters.unitType;
   if (filters.techBase) variables.techBase = filters.techBase;
+  if (filters.maxRulesLevel) variables.rulesLevel = filters.maxRulesLevel;
   if (filters.bvMin != null) variables.bvMin = filters.bvMin;
   if (filters.bvMax != null) variables.bvMax = filters.bvMax;
 
@@ -128,12 +129,6 @@ export async function fetchUnits(
     page++;
     // Rate limit: 0.5s between pages to stay under API burst limit
     await new Promise(r => setTimeout(r, 500));
-  }
-
-  // Filter by rules level hierarchy client-side
-  if (filters.maxRulesLevel) {
-    const allowed = new Set(allowedRulesLevels(filters.maxRulesLevel));
-    return units.filter(u => allowed.has(u.rulesLevel.toLowerCase()));
   }
 
   return units;
@@ -255,10 +250,10 @@ query UnitChassis($slug: String!) {
 }`;
 
 const CHASSIS_VARIANTS_QUERY = `
-query ChassisVariants($slug: String!) {
+query ChassisVariants($slug: String!, $rulesLevel: RulesLevelFilter) {
   chassis(slug: $slug) {
     slug name
-    variants {
+    variants(rulesLevel: $rulesLevel) {
       slug fullName variant tonnage bv role techBase rulesLevel introYear
       mechData { walkMp runMp jumpMp }
     }
@@ -279,11 +274,14 @@ export async function fetchUnitChassisSlug(unitSlug: string): Promise<string | n
   return slug;
 }
 
-export async function fetchChassisVariants(chassisSlug: string): Promise<Unit[]> {
-  const cached = chassisVariantsCache.get(chassisSlug);
+export async function fetchChassisVariants(chassisSlug: string, rulesLevel?: string): Promise<Unit[]> {
+  const cacheKey = rulesLevel ? `${chassisSlug}:${rulesLevel}` : chassisSlug;
+  const cached = chassisVariantsCache.get(cacheKey);
   if (cached) return cached;
 
-  const data = await executeQuery(CHASSIS_VARIANTS_QUERY, { slug: chassisSlug });
+  const variables: Record<string, unknown> = { slug: chassisSlug };
+  if (rulesLevel) variables.rulesLevel = rulesLevel;
+  const data = await executeQuery(CHASSIS_VARIANTS_QUERY, variables);
   const chassis = data.chassis as { variants: Record<string, unknown>[] } | null;
   if (!chassis) return [];
 
@@ -291,7 +289,7 @@ export async function fetchChassisVariants(chassisSlug: string): Promise<Unit[]>
     .map(v => parseUnit(v))
     .filter((u): u is Unit => u !== null);
 
-  chassisVariantsCache.set(chassisSlug, units);
+  chassisVariantsCache.set(cacheKey, units);
   return units;
 }
 
