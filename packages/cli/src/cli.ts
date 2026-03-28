@@ -4,9 +4,10 @@ import { Command } from 'commander';
 import {
   ERAS, MISSIONS, FACTION_TYPES, TECH_BASES, RULES_LEVELS,
   type Era, type Mission, type FactionType, type TechBase, type RulesLevel, type UnitFilters,
+  fetchUnits, fetchEras, fetchFactions,
+  generateRoster,
+  effectiveRulesLevel, computeBvFilterBounds,
 } from '@bt-roster/core';
-import { fetchUnits, fetchEras, fetchFactions } from '@bt-roster/core';
-import { generateRoster } from '@bt-roster/core';
 import { formatRoster, formatMissionsList, formatErasList, formatFactionsList } from './formatter.js';
 
 function parsePilot(value: string): [number, number] {
@@ -80,25 +81,25 @@ async function run(opts: Record<string, unknown>) {
     const count = opts.count as number;
     const factionType = opts.factionType as FactionType | undefined;
     const techBase = opts.techBase as TechBase | undefined;
-    let rulesLevel = opts.rulesLevel as RulesLevel;
-
-    // Clan tech requires Advanced
-    if (techBase === 'CLAN' && (rulesLevel === 'INTRODUCTORY' || rulesLevel === 'STANDARD')) {
-      rulesLevel = 'ADVANCED';
+    // Clan tech auto-bumps rules level
+    const { rulesLevel, wasBumped } = effectiveRulesLevel(
+      techBase,
+      opts.rulesLevel as RulesLevel,
+    );
+    if (wasBumped) {
       process.stderr.write('Note: Clan tech requires Advanced rules level, auto-adjusted.\n');
     }
 
     // Pilot skills
     let gunnery = 4, piloting = 5;
-    let autoPilots = opts.autoPilots !== false; // default true unless --no-auto-pilots
+    let autoPilots = opts.autoPilots !== false;
     if (opts.pilot) {
       [gunnery, piloting] = parsePilot(opts.pilot as string);
       autoPilots = false;
     }
 
     // Smart BV pre-filtering
-    const bvMin = Math.max(1, Math.floor(bv / count * 0.15));
-    const bvMax = bv - (count - 1);
+    const { bvMin, bvMax } = computeBvFilterBounds(bv, count);
 
     const filters: UnitFilters = {
       era,
