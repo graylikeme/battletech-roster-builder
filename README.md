@@ -35,8 +35,10 @@ npm run web:dev
   - **Saved Rosters** -- Save generated rosters with editable pilot skills and live adjusted BV totals.
 - **Mech browser** -- Search the full BattleDroids database with filters (era, faction type, faction, tech base, role). Infinite scroll pagination. Add mechs to any collection.
 - **Mech details** -- Click any mech name (in rosters, collections, or the browser) to expand an inline panel showing full loadout by location, armor distribution, engine, heat sinks, and quirks. Data is lazy-loaded from the API and cached.
-- **Chassis proxy mode** -- Toggle per collection. When enabled, each mech represents any variant of its chassis during generation (for tabletop miniature proxying).
-- **Collection-based generation** -- Select a mech pool as the unit source in the roster form. Generation is instant (no API fetch). Advanced filters (tech base, BV range) still apply client-side.
+- **Chassis proxy mode** -- Toggle per collection. When enabled, each mech represents any variant of its chassis during generation (for tabletop miniature proxying). The number of miniatures per chassis limits how many picks the generator can make. Collection view switches to a grouped chassis display showing name, tonnage, and mini count.
+- **Collection-based generation** -- Select a mech pool as the unit source in the roster form. Generation is instant (no API fetch) unless chassis proxy needs to expand variants. Advanced filters (tech base, BV range) still apply client-side.
+- **Export/Import** -- Save all collections to a JSON file for backup or transfer between devices. Import replaces all current collections (with confirmation when data exists).
+- **Persistent UI state** -- Form fields, generated rosters, active tab, selected collection, and type filter all survive page refresh (sessionStorage).
 
 ### Tech stack
 
