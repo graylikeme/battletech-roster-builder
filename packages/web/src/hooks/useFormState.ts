@@ -2,6 +2,8 @@ import { useReducer } from 'react'
 import type { Mission, Era, FactionType, TechBase, RulesLevel } from '@bt-roster/core'
 
 export interface FormState {
+  unitSource: 'api' | 'collection'
+  collectionId: string
   mission: Mission | ''
   bv: number
   count: number
@@ -22,6 +24,8 @@ type FormAction =
   | { type: 'RESET' }
 
 const initialState: FormState = {
+  unitSource: 'api',
+  collectionId: '',
   mission: '',
   bv: 6000,
   count: 4,
@@ -56,6 +60,7 @@ export function useFormState() {
   }
 
   const isValid = form.mission !== '' && form.era !== '' && form.bv > 0 && form.count > 0
+    && (form.unitSource === 'api' || form.collectionId !== '')
 
   return { form, setField, isValid, reset: () => dispatch({ type: 'RESET' }) }
 }

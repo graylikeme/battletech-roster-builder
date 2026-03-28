@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import type { FormState } from '@/hooks/useFormState'
 import type { EraInfo, FactionInfo } from '@bt-roster/core'
 import type { GeneratorStatus } from '@/hooks/useRosterGenerator'
+import type { Collection } from '@/services/collections'
 
 interface RosterFormProps {
   form: FormState
@@ -19,21 +20,62 @@ interface RosterFormProps {
   eras: EraInfo[]
   factions: FactionInfo[]
   factionsByType: (type: FactionType | undefined) => FactionInfo[]
+  collections: Collection[]
   status: GeneratorStatus
   onGenerate: () => void
 }
 
-export function RosterForm({ form, setField, isValid, eras, factions, factionsByType, status, onGenerate }: RosterFormProps) {
+function missionLabel(v: string) { return v ? MISSION_PROFILES[v as Mission]?.name ?? v : undefined }
+function eraLabel(v: string, eras: EraInfo[]) { return v ? eras.find(e => eraSlugToEnum(e.slug) === v)?.name ?? v.replace(/_/g, ' ') : undefined }
+function factionTypeLabel(v: string) { return v ? v.replace(/_/g, ' ') : undefined }
+function techBaseLabel(v: string) { return v ? v.replace(/_/g, ' ') : undefined }
+
+export function RosterForm({ form, setField, isValid, eras, factions, factionsByType, collections, status, onGenerate }: RosterFormProps) {
   const isLoading = status === 'fetching' || status === 'generating'
   const availableFactions = factionsByType(form.factionType as FactionType || undefined)
+  const mechPools = collections.filter(c => c.collectionType === 'mech_collection')
 
   return (
     <div className="space-y-6">
+      {/* Unit Source */}
+      <div className="space-y-2">
+        <Label>Unit Source</Label>
+        <Select value={form.unitSource} onValueChange={v => setField('unitSource', v as 'api' | 'collection')}>
+          <SelectTrigger>{form.unitSource === 'api' ? 'BattleDroids API' : 'Collection'}</SelectTrigger>
+          <SelectContent>
+            <SelectItem value="api">BattleDroids API</SelectItem>
+            <SelectItem value="collection">Collection</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Collection Picker */}
+      {form.unitSource === 'collection' && (
+        <div className="space-y-2">
+          <Label>Collection</Label>
+          {mechPools.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No mech pools yet. Create one in the Collections tab.</p>
+          ) : (
+            <Select value={form.collectionId} onValueChange={v => setField('collectionId', v)}>
+              <SelectTrigger>
+                {mechPools.find(c => c.id === form.collectionId)?.name
+                  ?? <span className="text-muted-foreground">Select collection...</span>}
+              </SelectTrigger>
+              <SelectContent>
+                {mechPools.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name} ({c.entries.length} mechs)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
+
       {/* Mission */}
       <div className="space-y-2">
         <Label>Mission</Label>
         <Select value={form.mission} onValueChange={v => setField('mission', v as Mission)}>
-          <SelectTrigger><SelectValue placeholder="Select mission..." /></SelectTrigger>
+          <SelectTrigger>{missionLabel(form.mission) ?? <span className="text-muted-foreground">Select mission...</span>}</SelectTrigger>
           <SelectContent>
             {MISSIONS.map(m => (
               <SelectItem key={m} value={m}>{MISSION_PROFILES[m].name}</SelectItem>
@@ -69,7 +111,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
       <div className="space-y-2">
         <Label>Era</Label>
         <Select value={form.era} onValueChange={v => setField('era', v as Era)}>
-          <SelectTrigger><SelectValue placeholder="Select era..." /></SelectTrigger>
+          <SelectTrigger>{eraLabel(form.era, eras) ?? <span className="text-muted-foreground">Select era...</span>}</SelectTrigger>
           <SelectContent>
             {eras.map(e => (
               <SelectItem key={e.slug} value={eraSlugToEnum(e.slug)}>{e.name}</SelectItem>
@@ -90,7 +132,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           <div className="space-y-2">
             <Label>Faction Type</Label>
             <Select value={form.factionType} onValueChange={v => { setField('factionType', v as FactionType); setField('factionSlug', ''); }}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+              <SelectTrigger>{factionTypeLabel(form.factionType) ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Any</SelectItem>
                 {FACTION_TYPES.map(ft => (
@@ -105,7 +147,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
             <div className="space-y-2">
               <Label>Faction</Label>
               <Select value={form.factionSlug} onValueChange={v => setField('factionSlug', v)}>
-                <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+                <SelectTrigger>{availableFactions.find(f => f.slug === form.factionSlug)?.name ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Any</SelectItem>
                   {availableFactions.map(f => (
@@ -120,7 +162,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           <div className="space-y-2">
             <Label>Tech Base</Label>
             <Select value={form.techBase} onValueChange={v => setField('techBase', v as TechBase)}>
-              <SelectTrigger><SelectValue placeholder="Any" /></SelectTrigger>
+              <SelectTrigger>{techBaseLabel(form.techBase) ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Any</SelectItem>
                 {TECH_BASES.map(tb => (
