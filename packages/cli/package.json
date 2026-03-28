@@ -1,0 +1,21 @@
+{
+  "name": "@bt-roster/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "bt-roster": "src/cli.ts"
+  },
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@bt-roster/core": "*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.0.0",
+    "vitest": "^3.0.0"
+  }
+}
