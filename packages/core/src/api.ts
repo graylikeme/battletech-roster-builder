@@ -139,6 +139,112 @@ export async function fetchUnits(
   return units;
 }
 
+// ---------------------------------------------------------------------------
+// Unit detail (lazy-loaded)
+// ---------------------------------------------------------------------------
+
+const UNIT_DETAIL_QUERY = `
+query UnitDetail($slug: String!) {
+  unit(slug: $slug) {
+    slug fullName variant tonnage bv role techBase rulesLevel introYear
+    mechData {
+      walkMp runMp jumpMp engineRating heatSinkCount heatSinkTypeRaw
+      armorTypeRaw structureTypeRaw
+      engine { name } gyro { name } cockpit { name }
+    }
+    locations { location armorPoints rearArmor structurePoints }
+    loadout { equipmentName quantity location }
+    quirks { name isPositive }
+  }
+}`;
+
+export interface LoadoutEntry {
+  equipmentName: string;
+  quantity: number;
+  location: string;
+}
+
+export interface LocationEntry {
+  location: string;
+  armorPoints: number | null;
+  rearArmor: number | null;
+  structurePoints: number | null;
+}
+
+export interface QuirkEntry {
+  name: string;
+  isPositive: boolean;
+}
+
+export interface MechDetail {
+  slug: string;
+  fullName: string;
+  variant: string;
+  tonnage: number;
+  bv: number;
+  role: string | null;
+  techBase: string;
+  rulesLevel: string;
+  introYear?: number;
+  walkMp?: number;
+  runMp?: number;
+  jumpMp?: number;
+  engineRating?: number;
+  engineName?: string;
+  heatSinkCount?: number;
+  heatSinkType?: string;
+  armorType?: string;
+  structureType?: string;
+  gyroName?: string;
+  cockpitName?: string;
+  loadout: LoadoutEntry[];
+  locations: LocationEntry[];
+  quirks: QuirkEntry[];
+}
+
+const detailCache = new Map<string, MechDetail>();
+
+export async function fetchUnitDetail(slug: string): Promise<MechDetail> {
+  const cached = detailCache.get(slug);
+  if (cached) return cached;
+
+  const data = await executeQuery(UNIT_DETAIL_QUERY, { slug });
+  const u = data.unit as Record<string, unknown>;
+  const md = (u.mechData ?? {}) as Record<string, unknown>;
+  const engine = (md.engine ?? {}) as Record<string, unknown>;
+  const gyro = (md.gyro ?? {}) as Record<string, unknown>;
+  const cockpit = (md.cockpit ?? {}) as Record<string, unknown>;
+
+  const detail: MechDetail = {
+    slug: u.slug as string,
+    fullName: u.fullName as string,
+    variant: (u.variant as string) ?? '',
+    tonnage: u.tonnage as number,
+    bv: u.bv as number,
+    role: (u.role as string) ?? null,
+    techBase: (u.techBase as string) ?? '',
+    rulesLevel: (u.rulesLevel as string) ?? '',
+    introYear: u.introYear as number | undefined,
+    walkMp: md.walkMp as number | undefined,
+    runMp: md.runMp as number | undefined,
+    jumpMp: md.jumpMp as number | undefined,
+    engineRating: md.engineRating as number | undefined,
+    engineName: engine.name as string | undefined,
+    heatSinkCount: md.heatSinkCount as number | undefined,
+    heatSinkType: md.heatSinkTypeRaw as string | undefined,
+    armorType: md.armorTypeRaw as string | undefined,
+    structureType: md.structureTypeRaw as string | undefined,
+    gyroName: gyro.name as string | undefined,
+    cockpitName: cockpit.name as string | undefined,
+    loadout: (u.loadout as LoadoutEntry[]) ?? [],
+    locations: (u.locations as LocationEntry[]) ?? [],
+    quirks: (u.quirks as QuirkEntry[]) ?? [],
+  };
+
+  detailCache.set(slug, detail);
+  return detail;
+}
+
 export interface FactionInfo {
   slug: string;
   name: string;
