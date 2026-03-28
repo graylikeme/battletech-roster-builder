@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import {
   fetchUnits, generateRoster,
   effectiveRulesLevel, computeBvFilterBounds,
+  fetchUnitChassisSlug, fetchChassisVariants,
   type Roster, type FetchProgress, type UnitFilters, type Unit,
 } from '@bt-roster/core'
 import type { FormState } from './useFormState'
@@ -35,11 +36,25 @@ export function useRosterGenerator() {
           setStatus('error')
           return
         }
-        const { bvMin, bvMax } = computeBvFilterBounds(form.bv, form.count)
-        const techBase = form.techBase || undefined
+        if (collection.chassisProxy) {
+          // Expand each entry to all variants of its chassis
+          setProgress({ page: 0, fetched: 0, total: 'Expanding chassis variants...' })
 
-        units = collection.entries
-          .map(e => ({
+          const chassisSlugs = new Set<string>()
+          for (const entry of collection.entries) {
+            const cs = await fetchUnitChassisSlug(entry.unitRef.slug)
+            if (cs) chassisSlugs.add(cs)
+          }
+
+          const allVariants = new Map<string, Unit>()
+          for (const cs of chassisSlugs) {
+            const variants = await fetchChassisVariants(cs)
+            for (const v of variants) allVariants.set(v.slug, v)
+          }
+          units = [...allVariants.values()]
+        } else {
+          // Use entries as-is
+          units = collection.entries.map(e => ({
             slug: e.unitRef.slug,
             fullName: e.unitRef.fullName,
             variant: e.unitRef.variant,
@@ -49,11 +64,16 @@ export function useRosterGenerator() {
             techBase: e.unitRef.techBase,
             rulesLevel: '',
           }) as Unit)
-          .filter(u => {
-            if (techBase && u.techBase.toLowerCase() !== techBase.toLowerCase()) return false
-            if (u.bv < bvMin || u.bv > bvMax) return false
-            return true
-          })
+        }
+
+        // Apply client-side filters
+        const { bvMin, bvMax } = computeBvFilterBounds(form.bv, form.count)
+        const techBase = form.techBase || undefined
+        units = units.filter(u => {
+          if (techBase && u.techBase.toLowerCase() !== techBase.toLowerCase()) return false
+          if (u.bv < bvMin || u.bv > bvMax) return false
+          return true
+        })
       } else {
         // Fetch from API
         const techBase = form.techBase || undefined

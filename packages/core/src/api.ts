@@ -245,6 +245,56 @@ export async function fetchUnitDetail(slug: string): Promise<MechDetail> {
   return detail;
 }
 
+// ---------------------------------------------------------------------------
+// Chassis variants (for proxy mode)
+// ---------------------------------------------------------------------------
+
+const UNIT_CHASSIS_QUERY = `
+query UnitChassis($slug: String!) {
+  unit(slug: $slug) { chassis { slug } }
+}`;
+
+const CHASSIS_VARIANTS_QUERY = `
+query ChassisVariants($slug: String!) {
+  chassis(slug: $slug) {
+    slug name
+    variants {
+      slug fullName variant tonnage bv role techBase rulesLevel introYear
+      mechData { walkMp runMp jumpMp }
+    }
+  }
+}`;
+
+const chassisSlugCache = new Map<string, string>();
+const chassisVariantsCache = new Map<string, Unit[]>();
+
+export async function fetchUnitChassisSlug(unitSlug: string): Promise<string | null> {
+  const cached = chassisSlugCache.get(unitSlug);
+  if (cached) return cached;
+
+  const data = await executeQuery(UNIT_CHASSIS_QUERY, { slug: unitSlug });
+  const unit = data.unit as { chassis?: { slug: string } } | null;
+  const slug = unit?.chassis?.slug ?? null;
+  if (slug) chassisSlugCache.set(unitSlug, slug);
+  return slug;
+}
+
+export async function fetchChassisVariants(chassisSlug: string): Promise<Unit[]> {
+  const cached = chassisVariantsCache.get(chassisSlug);
+  if (cached) return cached;
+
+  const data = await executeQuery(CHASSIS_VARIANTS_QUERY, { slug: chassisSlug });
+  const chassis = data.chassis as { variants: Record<string, unknown>[] } | null;
+  if (!chassis) return [];
+
+  const units = chassis.variants
+    .map(v => parseUnit(v))
+    .filter((u): u is Unit => u !== null);
+
+  chassisVariantsCache.set(chassisSlug, units);
+  return units;
+}
+
 export interface FactionInfo {
   slug: string;
   name: string;
