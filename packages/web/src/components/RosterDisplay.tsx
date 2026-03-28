@@ -14,11 +14,11 @@ const WEIGHT_CLASS_COLORS: Record<string, string> = {
   ASSAULT: 'text-red-400',
 }
 
-const WEIGHT_CLASS_BG: Record<string, string> = {
-  LIGHT: 'border-l-blue-500',
-  MEDIUM: 'border-l-green-500',
-  HEAVY: 'border-l-amber-500',
-  ASSAULT: 'border-l-red-500',
+const WEIGHT_CLASS_BAR: Record<string, string> = {
+  LIGHT: 'bg-blue-500',
+  MEDIUM: 'bg-green-500',
+  HEAVY: 'bg-amber-500',
+  ASSAULT: 'bg-red-500',
 }
 
 interface RosterDisplayProps {
@@ -89,13 +89,16 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
                 <>
                   <TableRow
                     key={entry.unit.slug}
-                    className={`border-l-2 ${WEIGHT_CLASS_BG[wc]} cursor-pointer hover:bg-accent/50`}
+                    className="cursor-pointer hover:bg-accent/50"
                     onClick={() => setExpandedSlug(isExpanded ? null : entry.unit.slug)}
                   >
                     <TableCell className="font-mono text-muted-foreground">{i + 1}</TableCell>
                     <TableCell className="font-medium">
-                      {entry.unit.fullName}
-                      <span className="ml-1 text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
+                        {entry.unit.fullName}
+                        <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{entry.unit.variant}</TableCell>
                     <TableCell className="text-right font-mono">{Math.floor(entry.unit.tonnage)}</TableCell>

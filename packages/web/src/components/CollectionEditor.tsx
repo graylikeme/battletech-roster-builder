@@ -219,8 +219,11 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                   onClick={() => setExpandedSlug(isExpanded ? null : entry.unitRef.slug)}
                 >
                   <TableCell className="font-medium">
-                    {entry.unitRef.fullName}
-                    <span className="ml-1 text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
+                      {entry.unitRef.fullName}
+                      <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right font-mono">{Math.floor(entry.unitRef.tonnage)}</TableCell>
                   <TableCell className="text-right font-mono">{entry.unitRef.bv}</TableCell>
