@@ -107,7 +107,7 @@ export function CollectionList({
             <div className="space-y-2">
               <Label>Type</Label>
               <Select value={newType} onValueChange={v => setNewType(v as CollectionType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>{newType === 'mech_collection' ? 'Mech Pool' : 'Roster'}</SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mech_collection">Mech Pool (for generation input)</SelectItem>
                   <SelectItem value="roster">Roster (saved roster)</SelectItem>
