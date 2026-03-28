@@ -222,6 +222,7 @@ export function App() {
                   onSelect={setSelectedCollection}
                   selectedId={currentCollection?.id}
                   typeFilter={collectionTypeFilter}
+                  onTypeFilterChange={setCollectionTypeFilter}
                 />
               </div>
 
