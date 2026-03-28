@@ -4,6 +4,8 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "bt-roster": "tsx packages/cli/src/cli.ts",
-    "test": "npm -w @bt-roster/core test"
+    "test": "npm -w @bt-roster/core test",
+    "web:dev": "npm -w @bt-roster/web run dev",
+    "web:build": "npm -w @bt-roster/web run build"
   }
 }
