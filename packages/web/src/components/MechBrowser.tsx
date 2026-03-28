@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   weightClassFromTonnage,
-  TECH_BASES, ROLES, FACTION_TYPES,
+  TECH_BASES, ROLES, FACTION_TYPES, RULES_LEVELS,
   type Unit,
 } from '@bt-roster/core'
 import type { CollectionEntry, UnitRef } from '@/services/collections'
@@ -23,10 +23,10 @@ const API_URL = import.meta.env.DEV ? '/api/graphql' : 'https://api.battledroids
 const SEARCH_QUERY = `
 query Search($first: Int!, $after: String, $nameSearch: String, $unitType: UnitTypeFilter,
   $techBase: TechBaseFilter, $eraSlug: EraFilter, $role: String,
-  $factionTypes: [FactionTypeFilter!], $factionSlug: String) {
+  $factionTypes: [FactionTypeFilter!], $factionSlug: String, $rulesLevel: RulesLevelFilter) {
   units(first: $first, after: $after, nameSearch: $nameSearch, unitType: $unitType,
     techBase: $techBase, eraSlug: $eraSlug, role: $role,
-    factionTypes: $factionTypes, factionSlug: $factionSlug) {
+    factionTypes: $factionTypes, factionSlug: $factionSlug, rulesLevel: $rulesLevel) {
     pageInfo { hasNextPage endCursor totalCount }
     edges { node { slug fullName variant tonnage bv role techBase rulesLevel introYear mechData { walkMp runMp jumpMp } } }
   }
@@ -52,6 +52,7 @@ interface Filters {
   role: string
   factionType: string
   factionSlug: string
+  rulesLevel: string
 }
 
 interface SearchResult {
@@ -73,6 +74,7 @@ async function searchUnits(query: string, filters: Filters, after?: string): Pro
   if (filters.role) variables.role = filters.role
   if (filters.factionType) variables.factionTypes = [filters.factionType]
   if (filters.factionSlug) variables.factionSlug = filters.factionSlug
+  if (filters.rulesLevel) variables.rulesLevel = filters.rulesLevel
 
   const resp = await fetch(API_URL, {
     method: 'POST',
@@ -117,7 +119,7 @@ const ERA_SLUG_MAP: Record<string, string> = {
 
 export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechBrowserProps) {
   const [query, setQuery] = useState('')
-  const [filters, setFilters] = useState<Filters>({ techBase: '', era: '', role: '', factionType: '', factionSlug: '' })
+  const [filters, setFilters] = useState<Filters>({ techBase: '', era: '', role: '', factionType: '', factionSlug: '', rulesLevel: '' })
   const [results, setResults] = useState<Unit[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -192,7 +194,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
   const addUnit = (unit: Unit) => {
     const ref: UnitRef = {
       slug: unit.slug, fullName: unit.fullName, variant: unit.variant,
-      tonnage: unit.tonnage, bv: unit.bv, role: unit.role, techBase: unit.techBase,
+      tonnage: unit.tonnage, bv: unit.bv, role: unit.role, techBase: unit.techBase, rulesLevel: unit.rulesLevel,
     }
     onAddEntry({ type: 'unit', unitRef: ref })
     setAddedSlug(unit.slug)
@@ -273,6 +275,18 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
               <SelectItem value="">Any Role</SelectItem>
               {ROLES.map(r => (
                 <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filters.rulesLevel} onValueChange={v => handleFilterChange('rulesLevel', v ?? '')}>
+            <SelectTrigger className="w-auto">
+              {filters.rulesLevel || <span className="text-muted-foreground">Rules Level</span>}
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Any Level</SelectItem>
+              {RULES_LEVELS.map(rl => (
+                <SelectItem key={rl} value={rl}>{rl}</SelectItem>
               ))}
             </SelectContent>
           </Select>
