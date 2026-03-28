@@ -35,8 +35,26 @@ export function App() {
     setActiveTabState(tab)
     sessionStorage.setItem('bt-active-tab', tab)
   }
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
-  const [collectionTypeFilter, setCollectionTypeFilter] = useState<CollectionType | 'all'>('all')
+  const [selectedCollection, setSelectedCollectionState] = useState<Collection | null>(() => {
+    const id = sessionStorage.getItem('bt-selected-collection')
+    if (id) {
+      const all = collections.length > 0 ? collections : []
+      return all.find(c => c.id === id) ?? null
+    }
+    return null
+  })
+  const setSelectedCollection = (c: Collection | null) => {
+    setSelectedCollectionState(c)
+    if (c) sessionStorage.setItem('bt-selected-collection', c.id)
+    else sessionStorage.removeItem('bt-selected-collection')
+  }
+  const [collectionTypeFilter, setCollectionTypeFilterState] = useState<CollectionType | 'all'>(() => {
+    return (sessionStorage.getItem('bt-collection-type-filter') as CollectionType | 'all') ?? 'all'
+  })
+  const setCollectionTypeFilter = (f: CollectionType | 'all') => {
+    setCollectionTypeFilterState(f)
+    sessionStorage.setItem('bt-collection-type-filter', f)
+  }
   const [showBrowser, setShowBrowser] = useState(false)
   const [saveRoster, setSaveRoster] = useState<Roster | null>(null)
 
