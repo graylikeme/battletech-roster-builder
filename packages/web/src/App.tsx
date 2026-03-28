@@ -133,7 +133,9 @@ export function App() {
                         const data = JSON.parse(reader.result as string)
                         if (!Array.isArray(data)) throw new Error('Invalid format')
                         const count = data.length
-                        if (confirm(`This will replace all your current collections (${collections.length}) with ${count} collections from the file. This cannot be undone. Continue?`)) {
+                        const shouldProceed = collections.length === 0 ||
+                          confirm(`This will replace all your current collections (${collections.length}) with ${count} collections from the file. This cannot be undone. Continue?`)
+                        if (shouldProceed) {
                           replaceAll(data)
                           if (data.length > 0) setSelectedCollection(data[0])
                         }
