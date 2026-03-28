@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 
 interface SaveRosterDialogProps {
   open: boolean
@@ -91,8 +91,8 @@ export function SaveRosterDialog({ open, roster, collections, onSaveNew, onSaveT
           ) : (
             <div className="space-y-2">
               <Label>Select Collection</Label>
-              <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger><SelectValue placeholder="Choose..." /></SelectTrigger>
+              <Select value={selectedId} onValueChange={v => setSelectedId(v ?? '')}>
+                <SelectTrigger>{collections.find(c => c.id === selectedId)?.name ?? <span className="text-muted-foreground">Choose...</span>}</SelectTrigger>
                 <SelectContent>
                   {collections.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Roster, Unit } from '@bt-roster/core'
+import type { Roster } from '@bt-roster/core'
 import { useReferenceData } from '@/hooks/useReferenceData'
 import { useFormState } from '@/hooks/useFormState'
 import { useRosterGenerator } from '@/hooks/useRosterGenerator'

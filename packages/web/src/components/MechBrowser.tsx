@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   weightClassFromTonnage,
   TECH_BASES, ROLES, FACTION_TYPES,
-  type Unit, type FactionType,
+  type Unit,
 } from '@bt-roster/core'
 import type { CollectionEntry, UnitRef } from '@/services/collections'
 import type { EraInfo, FactionInfo } from '@bt-roster/core'
@@ -125,7 +125,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
   const [loading, setLoading] = useState(false)
   const [addedSlug, setAddedSlug] = useState<string | null>(null)
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingRef = useRef(false)
   const filtersRef = useRef(filters)
@@ -215,7 +215,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
 
         {/* Filters */}
         <div className="flex gap-2 flex-wrap">
-          <Select value={filters.era} onValueChange={v => handleFilterChange('era', v)}>
+          <Select value={filters.era} onValueChange={v => handleFilterChange('era', v ?? '')}>
             <SelectTrigger className="w-auto">
               {filters.era ? eras.find(e => ERA_SLUG_MAP[e.slug] === filters.era)?.name ?? filters.era : <span className="text-muted-foreground">Era</span>}
             </SelectTrigger>
@@ -227,7 +227,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
             </SelectContent>
           </Select>
 
-          <Select value={filters.factionType} onValueChange={v => handleFilterChange('factionType', v)}>
+          <Select value={filters.factionType} onValueChange={v => handleFilterChange('factionType', v ?? '')}>
             <SelectTrigger className="w-auto">
               {filters.factionType ? filters.factionType.replace(/_/g, ' ') : <span className="text-muted-foreground">Faction Type</span>}
             </SelectTrigger>
@@ -240,7 +240,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
           </Select>
 
           {availableFactions.length > 0 && (
-            <Select value={filters.factionSlug} onValueChange={v => handleFilterChange('factionSlug', v)}>
+            <Select value={filters.factionSlug} onValueChange={v => handleFilterChange('factionSlug', v ?? '')}>
               <SelectTrigger className="w-auto">
                 {availableFactions.find(f => f.slug === filters.factionSlug)?.name ?? <span className="text-muted-foreground">Faction</span>}
               </SelectTrigger>
@@ -253,7 +253,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
             </Select>
           )}
 
-          <Select value={filters.techBase} onValueChange={v => handleFilterChange('techBase', v)}>
+          <Select value={filters.techBase} onValueChange={v => handleFilterChange('techBase', v ?? '')}>
             <SelectTrigger className="w-auto">
               {filters.techBase ? filters.techBase.replace(/_/g, ' ') : <span className="text-muted-foreground">Tech Base</span>}
             </SelectTrigger>
@@ -265,7 +265,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
             </SelectContent>
           </Select>
 
-          <Select value={filters.role} onValueChange={v => handleFilterChange('role', v)}>
+          <Select value={filters.role} onValueChange={v => handleFilterChange('role', v ?? '')}>
             <SelectTrigger className="w-auto">
               {filters.role || <span className="text-muted-foreground">Role</span>}
             </SelectTrigger>

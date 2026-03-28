@@ -1,11 +1,11 @@
 import {
-  MISSIONS, ERAS, FACTION_TYPES, TECH_BASES, MISSION_PROFILES,
+  MISSIONS, FACTION_TYPES, TECH_BASES, MISSION_PROFILES,
   type Mission, type Era, type FactionType, type TechBase,
 } from '@bt-roster/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import type { FormState } from '@/hooks/useFormState'
@@ -30,7 +30,7 @@ function eraLabel(v: string, eras: EraInfo[]) { return v ? eras.find(e => eraSlu
 function factionTypeLabel(v: string) { return v ? v.replace(/_/g, ' ') : undefined }
 function techBaseLabel(v: string) { return v ? v.replace(/_/g, ' ') : undefined }
 
-export function RosterForm({ form, setField, isValid, eras, factions, factionsByType, collections, status, onGenerate }: RosterFormProps) {
+export function RosterForm({ form, setField, isValid, eras, factionsByType, collections, status, onGenerate }: RosterFormProps) {
   const isLoading = status === 'fetching' || status === 'generating'
   const availableFactions = factionsByType(form.factionType as FactionType || undefined)
   const mechPools = collections.filter(c => c.collectionType === 'mech_collection')
@@ -40,7 +40,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
       {/* Unit Source */}
       <div className="space-y-2">
         <Label>Unit Source</Label>
-        <Select value={form.unitSource} onValueChange={v => setField('unitSource', v as 'api' | 'collection')}>
+        <Select value={form.unitSource} onValueChange={v => setField('unitSource', (v ?? 'api') as 'api' | 'collection')}>
           <SelectTrigger>{form.unitSource === 'api' ? 'BattleDroids API' : 'Collection'}</SelectTrigger>
           <SelectContent>
             <SelectItem value="api">BattleDroids API</SelectItem>
@@ -56,7 +56,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           {mechPools.length === 0 ? (
             <p className="text-xs text-muted-foreground">No mech pools yet. Create one in the Collections tab.</p>
           ) : (
-            <Select value={form.collectionId} onValueChange={v => setField('collectionId', v)}>
+            <Select value={form.collectionId} onValueChange={v => setField('collectionId', v ?? '')}>
               <SelectTrigger>
                 {mechPools.find(c => c.id === form.collectionId)?.name
                   ?? <span className="text-muted-foreground">Select collection...</span>}
@@ -74,7 +74,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
       {/* Mission */}
       <div className="space-y-2">
         <Label>Mission</Label>
-        <Select value={form.mission} onValueChange={v => setField('mission', v as Mission)}>
+        <Select value={form.mission} onValueChange={v => setField('mission', (v ?? '') as Mission)}>
           <SelectTrigger>{missionLabel(form.mission) ?? <span className="text-muted-foreground">Select mission...</span>}</SelectTrigger>
           <SelectContent>
             {MISSIONS.map(m => (
@@ -110,7 +110,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
       {/* Era */}
       <div className="space-y-2">
         <Label>Era</Label>
-        <Select value={form.era} onValueChange={v => setField('era', v as Era)}>
+        <Select value={form.era} onValueChange={v => setField('era', (v ?? '') as Era)}>
           <SelectTrigger>{eraLabel(form.era, eras) ?? <span className="text-muted-foreground">Select era...</span>}</SelectTrigger>
           <SelectContent>
             {eras.map(e => (
@@ -131,7 +131,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           {/* Faction Type */}
           <div className="space-y-2">
             <Label>Faction Type</Label>
-            <Select value={form.factionType} onValueChange={v => { setField('factionType', v as FactionType); setField('factionSlug', ''); }}>
+            <Select value={form.factionType} onValueChange={v => { setField('factionType', (v ?? '') as FactionType); setField('factionSlug', ''); }}>
               <SelectTrigger>{factionTypeLabel(form.factionType) ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Any</SelectItem>
@@ -146,7 +146,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           {availableFactions.length > 0 && (
             <div className="space-y-2">
               <Label>Faction</Label>
-              <Select value={form.factionSlug} onValueChange={v => setField('factionSlug', v)}>
+              <Select value={form.factionSlug} onValueChange={v => setField('factionSlug', v ?? '')}>
                 <SelectTrigger>{availableFactions.find(f => f.slug === form.factionSlug)?.name ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Any</SelectItem>
@@ -161,7 +161,7 @@ export function RosterForm({ form, setField, isValid, eras, factions, factionsBy
           {/* Tech Base */}
           <div className="space-y-2">
             <Label>Tech Base</Label>
-            <Select value={form.techBase} onValueChange={v => setField('techBase', v as TechBase)}>
+            <Select value={form.techBase} onValueChange={v => setField('techBase', (v ?? '') as TechBase)}>
               <SelectTrigger>{techBaseLabel(form.techBase) ?? <span className="text-muted-foreground">Any</span>}</SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Any</SelectItem>
