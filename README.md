@@ -133,6 +133,8 @@ INTRODUCTORY < STANDARD < ADVANCED < EXPERIMENTAL
 
 `UNOFFICIAL` is standalone and includes everything. Default is `STANDARD`. Clan tech auto-bumps to `ADVANCED`.
 
+The BattleDroids API supports hierarchical rules level filtering server-side on both `units` and `chassis.variants` queries. The filter is available in the web app's roster form (Advanced Filters), mech browser, and collection-based generation.
+
 ## Architecture
 
 ```
