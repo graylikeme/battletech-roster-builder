@@ -64,7 +64,7 @@ export function CollectionList({
         {filtered.map(c => (
           <Card
             key={c.id}
-            className={`cursor-pointer transition-colors hover:border-primary ${c.id === selectedId ? 'border-primary' : ''}`}
+            className={`cursor-pointer transition-colors hover:border-primary ${c.id === selectedId ? 'border-primary bg-primary/5' : ''}`}
             onClick={() => onSelect(c)}
           >
             <CardHeader className="p-3">
