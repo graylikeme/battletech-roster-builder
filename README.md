@@ -2,7 +2,7 @@
 
 A mission-driven BattleTech Classic roster generator. Rather than randomly filling a BV bucket, it uses mission profiles to drive force composition -- selecting mechs by role and weight class to build rosters that make tactical sense for the scenario you are playing.
 
-Built as a TypeScript monorepo. Pulls unit data from the [BattleDroids](https://battledroids.ru) GraphQL API, which indexes approximately 6,500 BattleMech variants sourced from MegaMek.
+Built as a TypeScript monorepo with a shared core module, CLI tool, and React web app. Pulls unit data from the [BattleDroids](https://battledroids.ru) GraphQL API, which indexes approximately 6,500 BattleMech variants sourced from MegaMek.
 
 ## How It Works
 
@@ -16,30 +16,177 @@ Built as a TypeScript monorepo. Pulls unit data from the [BattleDroids](https://
 
 5. **BV adjustment** -- All BV values are adjusted using the official TechManual skill multiplier table (p.315). A 4/5 pilot is the 1.00x baseline; better skills increase BV, worse skills decrease it.
 
-## Example Output
+## Web App
 
-```
-$ node --import tsx packages/cli/src/cli.ts \
-    --mission pitched_battle --bv 6000 --count 4 \
-    --era CLAN_INVASION --tech-base INNER_SPHERE --seed 7
+The web app provides a full browser-based interface for roster generation and collection management.
 
- BATTLETECH ROSTER -- Pitched Battle
- Era: Clan Invasion
- BV Budget: 6000 | BV Used: 5994 (99.9%) | Remaining: 6
- ─────────────────────────────────────────────────────────────────────────
-  #  Unit Name              Variant    Tons  Pilot    BV  Adj BV  Role
- ─────────────────────────────────────────────────────────────────────────
-  1  Orion ON1-VA           ON1-VA       75    4/5  1328    1328  Juggernaut
-  2  Flashman FLS-7K        FLS-7K       75    4/2  1480    1865  Brawler
-  3  Shadow Hawk SHD-2K     SHD-2K       55    4/4  1147    1262  Sniper
-  4  Viper VP-5             VP-5         70    4/5  1539    1539  Brawler
- ─────────────────────────────────────────────────────────────────────────
-     TOTAL                              275         5494    5994
+### Run locally
+
+```bash
+npm run web:dev
+# Open http://localhost:5173
 ```
 
-## Installation
+### Features
 
-Requires **Node.js 18+**.
+- **Roster generation** -- Select mission, BV budget, mech count, era, and optional filters (faction, tech base). Click Generate to build a roster with auto-assigned pilot skills. Generate multiple variants to compare.
+- **Collections** -- Two types:
+  - **Mech Pools** -- Curate a list of mechs (e.g. your miniature collection) and use it as the unit source for roster generation instead of querying the API.
+  - **Saved Rosters** -- Save generated rosters with editable pilot skills and live adjusted BV totals.
+- **Mech browser** -- Search the full BattleDroids database with filters (era, faction type, faction, tech base, role). Infinite scroll pagination. Add mechs to any collection.
+- **Mech details** -- Click any mech name (in rosters, collections, or the browser) to expand an inline panel showing full loadout by location, armor distribution, engine, heat sinks, and quirks. Data is lazy-loaded from the API and cached.
+- **Chassis proxy mode** -- Toggle per collection. When enabled, each mech represents any variant of its chassis during generation (for tabletop miniature proxying).
+- **Collection-based generation** -- Select a mech pool as the unit source in the roster form. Generation is instant (no API fetch). Advanced filters (tech base, BV range) still apply client-side.
+
+### Tech stack
+
+- React 19, Vite 8, TypeScript
+- shadcn/ui (Radix + Tailwind CSS) with dark theme
+- Imports `@bt-roster/core` directly -- same generation logic as CLI
+
+## CLI
+
+```bash
+# Generate a roster
+node --import tsx packages/cli/src/cli.ts \
+  --mission pitched_battle --bv 6000 --count 4 \
+  --era CLAN_INVASION --tech-base INNER_SPHERE
+
+# Multiple variants
+node --import tsx packages/cli/src/cli.ts \
+  --mission defense --bv 5000 --count 3 \
+  --era CLAN_INVASION --variants 3 --seed 42
+
+# Discovery commands
+node --import tsx packages/cli/src/cli.ts --list-missions
+node --import tsx packages/cli/src/cli.ts --list-eras
+node --import tsx packages/cli/src/cli.ts --list-factions --faction-type GREAT_HOUSE
+```
+
+### CLI Reference
+
+```
+Required:
+  --mission       pitched_battle, recon, objective_raid, defense,
+                  escort, extraction, breakthrough, zone_control
+  --bv            Total BV budget
+  --count         Number of mechs
+  --era           AGE_OF_WAR, STAR_LEAGUE, EARLY_SUCCESSION_WARS,
+                  LATE_SUCCESSION_WARS, RENAISSANCE, CLAN_INVASION,
+                  CIVIL_WAR, JIHAD, DARK_AGE, IL_CLAN
+
+Optional:
+  --faction-type  GREAT_HOUSE, CLAN, PERIPHERY, MERCENARY, OTHER
+  --faction       Specific faction slug (e.g. davion, clan-wolf)
+  --tech-base     INNER_SPHERE, CLAN, MIXED, PRIMITIVE
+  --rules-level   Max rules level (default: STANDARD)
+  --pilot G/P     Fixed pilot skill (e.g. 3/4), disables auto-assignment
+  --no-auto-pilots  All pilots stay at tech base baseline
+  --variants N    Generate N different rosters (default: 1, max: 10)
+  --seed          Random seed for reproducible output
+
+Discovery:
+  --list-missions   Show mission types
+  --list-eras       Show available eras
+  --list-factions   Show factions (filterable by --faction-type)
+```
+
+## Mission Types
+
+| Mission | Description | Favors |
+|---------|------------|--------|
+| `pitched_battle` | Standard direct engagement | Juggernauts, Brawlers, Snipers. Medium/Heavy. |
+| `recon` | Locate objectives, gather intel | Strikers, Skirmishers. Light/Medium. |
+| `objective_raid` | Destroy turrets, buildings, infrastructure | Snipers, Missile Boats. Medium/Heavy. |
+| `defense` | Hold a position against attackers | Juggernauts, Snipers, Missile Boats. Heavy/Assault. |
+| `escort` | Protect convoy or VIP | Skirmishers, Brawlers, Strikers. Balanced. |
+| `extraction` | Retrieve objective and bring it home | Strikers, Skirmishers. Light/Medium. |
+| `breakthrough` | Escape through enemy lines | Brawlers, Skirmishers, Juggernauts. Medium/Heavy. |
+| `zone_control` | Hold multiple objective points | Juggernauts, Skirmishers, Snipers. Medium/Heavy/Assault. |
+
+## Pilot Skills
+
+Pilot skills affect BV using the multiplier table from TechManual p.315.
+
+**Tech base baselines:**
+
+| Tech Base | Default Skill | Multiplier |
+|-----------|--------------|------------|
+| Inner Sphere | 4/5 (Regular) | 1.00x |
+| Clan | 3/4 (Veteran) | 1.32x |
+
+**Auto-assignment (default):** The generator picks mechs first, then spends remaining BV on pilot upgrades. Gunnery is prioritized for fire-support roles (Sniper, Missile Boat, Juggernaut); piloting for mobile roles (Striker, Skirmisher, Brawler). Skills cap at 2 minimum.
+
+**Overrides:**
+- `--pilot 3/4` -- Fixed skill for all mechs, disables auto-assignment.
+- `--no-auto-pilots` -- All pilots stay at baseline (4/5 or 3/4).
+
+## Rules Level Hierarchy
+
+The `--rules-level` flag sets the maximum allowed rules level. The hierarchy is cumulative:
+
+```
+INTRODUCTORY < STANDARD < ADVANCED < EXPERIMENTAL
+```
+
+`UNOFFICIAL` is standalone and includes everything. Default is `STANDARD`. Clan tech auto-bumps to `ADVANCED`.
+
+## Architecture
+
+```
+battletech-roster-builder/
+  package.json                    # Root workspace configuration
+  packages/
+    core/                         # @bt-roster/core -- shared domain logic
+      src/
+        index.ts                  # Public API re-exports
+        models.ts                 # Types, string literal unions, weight class utilities
+        missions.ts               # 8 mission profiles, slot assignment algorithm
+        pilots.ts                 # BV skill multiplier table, auto-assignment engine
+        generator.ts              # Roster generation (seeded PRNG, multi-pass selection)
+        api.ts                    # BattleDroids GraphQL client (paginated, rate-limited)
+        utils.ts                  # Shared utilities (rules level bump, BV filter bounds)
+      tests/                      # 85 tests
+    cli/                          # @bt-roster/cli -- command-line interface
+      src/
+        cli.ts                    # Commander.js argument parsing
+        formatter.ts              # Terminal table output
+      tests/                      # 30 tests
+    web/                          # @bt-roster/web -- React web app
+      src/
+        App.tsx                   # Main layout with Generate/Collections tabs
+        components/
+          RosterForm.tsx          # Mission, BV, count, era, filters, unit source
+          RosterDisplay.tsx       # HTML table with expandable mech details
+          RosterVariants.tsx      # Tab navigation for multiple variants
+          CollectionList.tsx      # Browse/create/filter collections
+          CollectionEditor.tsx    # Edit collection, pilot skills, chassis proxy
+          MechBrowser.tsx         # Search mechs with API filters, infinite scroll
+          MechDetailCard.tsx      # Lazy-loaded mech info (loadout, armor, quirks)
+          SaveRosterDialog.tsx    # Save roster as collection
+          LoadingOverlay.tsx      # Progress bar during API fetch
+          ErrorBanner.tsx         # Error display
+        hooks/
+          useFormState.ts         # Form state via useReducer
+          useReferenceData.ts     # Fetches eras/factions on mount
+          useRosterGenerator.ts   # Fetch + generate pipeline
+          useCollections.ts       # Collection CRUD + localStorage sync
+        services/
+          collections.ts          # localStorage persistence for collections
+      tests/                      # 18 tests
+```
+
+### Package Responsibilities
+
+**@bt-roster/core** -- Zero-dependency shared module containing all domain logic: data models, mission profiles, pilot skill calculations, roster generation algorithm, and BattleDroids API client. Works in both Node.js and browser.
+
+**@bt-roster/cli** -- Command-line interface built on Commander.js. Handles argument parsing, progress output, and tabular formatting.
+
+**@bt-roster/web** -- React 19 SPA with shadcn/ui components and Tailwind CSS dark theme. Roster generation, collections management, mech browsing with detail views.
+
+## Development
+
+### Installation
 
 ```bash
 git clone <repo-url>
@@ -47,247 +194,50 @@ cd battletech-roster-builder
 npm install
 ```
 
-The `npm install` at the root handles all workspace dependencies automatically.
-
-## CLI Usage
-
-Run the CLI via the workspace script or with `tsx` directly:
+### Running
 
 ```bash
-# Via npm script
-npm run bt-roster -- --mission pitched_battle --bv 8000 --count 4 --era CLAN_INVASION
+# Web app (dev server with API proxy)
+npm run web:dev
 
-# Via tsx directly
-node --import tsx packages/cli/src/cli.ts --mission pitched_battle --bv 8000 --count 4 --era CLAN_INVASION
-```
-
-### Required Flags
-
-| Flag | Description |
-|------|-------------|
-| `--mission <type>` | Mission type (see mission types table below) |
-| `--bv <number>` | Total BV budget for the roster |
-| `--count <number>` | Number of mechs in the roster |
-| `--era <era>` | Era filter for available units |
-
-### Optional Flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--faction-type <type>` | -- | Filter by faction type: `GREAT_HOUSE`, `CLAN`, `PERIPHERY`, `MERCENARY`, `OTHER` |
-| `--faction <slug>` | -- | Filter by specific faction slug (e.g. `davion`, `clan-wolf`) |
-| `--tech-base <base>` | -- | Filter by tech base: `INNER_SPHERE`, `CLAN`, `MIXED`, `PRIMITIVE` |
-| `--rules-level <level>` | `STANDARD` | Maximum rules level: `INTRODUCTORY`, `STANDARD`, `ADVANCED`, `EXPERIMENTAL`, `UNOFFICIAL` |
-| `--pilot <g/p>` | -- | Fixed pilot skill for all mechs (e.g. `3/4`). Disables auto-assignment |
-| `--no-auto-pilots` | -- | Disable auto pilot skill assignment (all pilots stay at baseline) |
-| `--seed <number>` | -- | Random seed for reproducible rosters |
-| `--variants <number>` | `1` | Generate N roster variants (max 10) |
-
-### Discovery Commands
-
-```bash
-# List all mission types with descriptions
+# CLI
 node --import tsx packages/cli/src/cli.ts --list-missions
 
-# List all available eras
-node --import tsx packages/cli/src/cli.ts --list-eras
-
-# List all factions (optionally filtered by type)
-node --import tsx packages/cli/src/cli.ts --list-factions
-node --import tsx packages/cli/src/cli.ts --list-factions --faction-type CLAN
+# Production build
+npm run web:build
 ```
-
-### Examples
-
-**Basic roster generation:**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission pitched_battle --bv 8000 --count 4 --era CLAN_INVASION
-```
-
-**With faction and tech base filters:**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission defense --bv 10000 --count 6 --era DARK_AGE \
-  --faction-type GREAT_HOUSE --tech-base INNER_SPHERE
-```
-
-**Multiple variants for comparison:**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission recon --bv 5000 --count 4 --era LATE_SUCCESSION_WARS \
-  --variants 3
-```
-
-**Fixed pilot skills (disables auto-assignment):**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission pitched_battle --bv 6000 --count 4 --era CLAN_INVASION \
-  --pilot 3/4
-```
-
-**Clan forces (auto-bumps rules level to Advanced):**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission breakthrough --bv 8000 --count 4 --era CLAN_INVASION \
-  --tech-base CLAN
-```
-
-When `--tech-base CLAN` is specified and the rules level is Introductory or Standard, the CLI automatically bumps it to Advanced, since Clan technology is not available at lower rules levels.
-
-**Reproducible roster with seed:**
-
-```bash
-node --import tsx packages/cli/src/cli.ts \
-  --mission pitched_battle --bv 6000 --count 4 --era CLAN_INVASION \
-  --tech-base INNER_SPHERE --seed 42
-```
-
-Using the same seed with the same filters produces identical output every time, on any machine. The unit pool is sorted deterministically before selection, so API response ordering does not affect results.
-
-## Mission Types
-
-All 8 mission types are derived from standard BattleTech tabletop scenarios. Each defines weighted distributions for combat roles and mech weight classes.
-
-| Mission | Description | Favored Roles | Weight Bias |
-|---------|-------------|---------------|-------------|
-| `pitched_battle` | Standard direct engagement -- destroy or rout the enemy | Juggernaut, Brawler, Sniper, Missile Boat, Skirmisher | Heavy, Medium, Assault |
-| `recon` | Locate hidden objectives, search buildings, gather intel | Skirmisher, Striker, Sniper | Light, Medium |
-| `objective_raid` | Destroy installations, turrets, buildings, infrastructure | Sniper, Missile Boat, Striker, Brawler | Medium, Heavy |
-| `defense` | Hold a position, protect buildings or installations | Juggernaut, Sniper, Missile Boat, Brawler | Assault, Heavy |
-| `escort` | Protect a convoy or VIP mech moving across the map | Skirmisher, Brawler, Striker, Juggernaut | Medium, Heavy |
-| `extraction` | Retrieve an objective/unit and bring it back to your edge | Striker, Skirmisher, Brawler, Sniper | Medium, Light |
-| `breakthrough` | Escape through enemy lines with as many units as possible | Brawler, Skirmisher, Juggernaut, Striker | Heavy, Medium, Assault |
-| `zone_control` | Hold multiple objective points spread across the map | Juggernaut, Skirmisher, Sniper, Brawler (even 25% each) | Medium, Heavy, Assault |
-
-## Pilot Skills
-
-### Tech Base Baselines
-
-| Tech Base | Gunnery/Piloting | BV Multiplier | Description |
-|-----------|-----------------|---------------|-------------|
-| Inner Sphere | 4/5 | 1.00x | Standard baseline (Regular) |
-| Clan | 3/4 | 1.32x | Clan frontline standard (Veteran) |
-| Mixed | 4/5 | 1.00x | Same as Inner Sphere |
-| Primitive | 4/5 | 1.00x | Same as Inner Sphere |
-
-### Auto-Assignment Logic
-
-When auto-pilot assignment is enabled (the default), the generator:
-
-1. Sets each pilot to the baseline for its unit's tech base.
-2. Calculates remaining BV headroom (budget minus current total).
-3. Greedily upgrades the cheapest beneficial skill improvement, factoring in role affinity:
-   - **Gunnery priority** (1.2x selection weight): Sniper, Missile Boat, Juggernaut -- these roles benefit most from hitting harder.
-   - **Piloting priority** (1.2x selection weight): Striker, Skirmisher, Brawler, Scout -- these roles benefit most from maneuverability and avoiding falls.
-4. Skills are capped at a minimum of 2 (no pilot goes below Gunnery 2 or Piloting 2).
-5. Repeats until no further upgrade fits within the remaining BV.
-
-### BV Multiplier Reference
-
-Pilot skills adjust the unit's base BV according to the TechManual skill multiplier table (p.315). Selected reference points:
-
-| Gunnery/Piloting | Multiplier |
-|------------------|------------|
-| 0/0 | 2.42x |
-| 2/3 | 1.44x |
-| 3/4 | 1.32x |
-| 4/5 | 1.00x (baseline) |
-| 5/6 | 0.86x |
-| 8/8 | 0.64x |
-
-The full table covers all 81 combinations from 0/0 through 8/8.
-
-### Overriding Auto-Assignment
-
-- `--pilot 3/4` -- Sets a fixed Gunnery 3 / Piloting 4 for all mechs and disables auto-assignment.
-- `--no-auto-pilots` -- Disables the upgrade loop; all pilots stay at their tech base baseline (4/5 for IS, 3/4 for Clan).
-
-## Rules Level Hierarchy
-
-The `--rules-level` flag sets the maximum allowed rules level. The hierarchy is cumulative -- setting a level allows that level and everything below it:
-
-```
-INTRODUCTORY < STANDARD < ADVANCED < EXPERIMENTAL
-```
-
-`UNOFFICIAL` is a standalone category. When selected, it allows all four hierarchical levels plus unofficial units.
-
-The default is `STANDARD` (includes Introductory and Standard units). When `--tech-base CLAN` is used, the CLI automatically bumps the rules level to at least `ADVANCED`, since Clan technology is not available at Introductory or Standard levels.
-
-## Architecture
-
-```
-battletech-roster-builder/
-  package.json                  # Root workspace configuration
-  packages/
-    core/                       # @bt-roster/core -- shared domain logic
-      src/
-        index.ts                # Public API re-exports
-        models.ts               # Types, string literal unions, weight class utilities
-        missions.ts             # 8 mission profiles, slot assignment algorithm
-        pilots.ts               # BV skill multiplier table, auto-assignment engine
-        generator.ts            # Roster generation (seeded PRNG, multi-pass unit selection)
-        api.ts                  # BattleDroids GraphQL client (paginated, rate-limited)
-      tests/
-        models.test.ts          # Weight class and rules level tests
-        missions.test.ts        # Slot assignment tests
-        pilots.test.ts          # Skill multiplier and auto-assignment tests
-        generator.test.ts       # End-to-end roster generation tests
-        api.test.ts             # API client tests (mocked fetch)
-    cli/
-      tests/
-        cli.test.ts             # CLI integration tests and regression tests
-    cli/                        # @bt-roster/cli -- command-line interface
-      src/
-        cli.ts                  # Commander.js argument parsing, orchestration
-        formatter.ts            # Tabular output formatting for rosters and discovery lists
-```
-
-### Package Responsibilities
-
-**@bt-roster/core** -- Zero-dependency shared module containing all domain logic: data models, mission profiles, pilot skill calculations, the roster generation algorithm, and the BattleDroids API client. Designed to be imported by any consumer.
-
-**@bt-roster/cli** -- Command-line interface built on [Commander.js](https://github.com/tj/commander.js). Handles argument parsing, progress output to stderr, and tabular formatting to stdout. Depends on `@bt-roster/core`.
-
-**Future packages** -- The monorepo structure is designed to support additional consumers such as `@bt-roster/web` (browser UI) and `@bt-roster/bot` (Discord/Slack bot), all sharing the core library.
-
-## Development
 
 ### Running Tests
 
 ```bash
-# Run core tests (75 tests)
+# All core tests (85 tests)
 npm test
 
-# Run CLI integration tests (30 tests)
+# CLI integration tests (30 tests)
 npm -w @bt-roster/cli test
 
-# Run tests in watch mode
+# Web tests (18 tests)
+npm -w @bt-roster/web test
+
+# Watch mode
 npm -w @bt-roster/core run test:watch
 ```
 
-Tests use [Vitest](https://vitest.dev/).
+133 tests total. Tests use [Vitest](https://vitest.dev/).
 
 ### Tech Stack
 
-- **TypeScript 5.7+** -- All packages use strict TypeScript with ESM (`"type": "module"`).
-- **npm workspaces** -- The root `package.json` links `@bt-roster/core` into `@bt-roster/cli` automatically.
-- **tsx** -- TypeScript loader for direct execution without a compile step.
+- **TypeScript** -- Strict mode, ESM throughout.
+- **npm workspaces** -- Monorepo linking.
+- **tsx** -- TypeScript execution without compile step.
 - **Commander.js** -- CLI argument parsing.
-- **Vitest** -- Test runner.
+- **React 19** -- Web UI framework.
+- **Vite 8** -- Web build tool with CORS proxy for development.
+- **shadcn/ui** -- Component library (Radix primitives + Tailwind CSS).
+- **Vitest** -- Test runner across all packages.
 
 ## Data Source
 
-All unit data comes from the [BattleDroids GraphQL API](https://api.battledroids.ru/graphql), which indexes BattleMech data from [MegaMek](https://megamek.org/). The API is queried at runtime -- no local unit database is bundled or required.
+All unit data comes from the [BattleDroids GraphQL API](https://api.battledroids.ru/graphql), which indexes BattleMech data from [MegaMek](https://megamek.org/). The API is queried at runtime -- no local unit database is bundled.
 
-The CLI fetches units in pages of 100, with a 500ms delay between pages to respect API rate limits. Smart BV pre-filtering narrows the query range to avoid fetching units that could never fit the budget.
-
-## License
-
-See [LICENSE](LICENSE) for details.
+Era filter is cumulative -- selecting "Clan Invasion" includes all mechs available up to and including that era.
