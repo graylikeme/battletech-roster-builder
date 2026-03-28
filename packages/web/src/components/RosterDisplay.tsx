@@ -1,0 +1,106 @@
+import { weightClassFromTonnage, MISSION_PROFILES, type Roster } from '@bt-roster/core'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
+
+const WEIGHT_CLASS_COLORS: Record<string, string> = {
+  LIGHT: 'text-blue-400',
+  MEDIUM: 'text-green-400',
+  HEAVY: 'text-amber-400',
+  ASSAULT: 'text-red-400',
+}
+
+const WEIGHT_CLASS_BG: Record<string, string> = {
+  LIGHT: 'border-l-blue-500',
+  MEDIUM: 'border-l-green-500',
+  HEAVY: 'border-l-amber-500',
+  ASSAULT: 'border-l-red-500',
+}
+
+interface RosterDisplayProps {
+  roster: Roster
+}
+
+export function RosterDisplay({ roster }: RosterDisplayProps) {
+  const profile = MISSION_PROFILES[roster.mission]
+  const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
+  const eraLabel = roster.era.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+  return (
+    <div className="space-y-3">
+      {/* Header */}
+      <div className="space-y-1">
+        <h3 className="text-lg font-semibold">{profile.name}</h3>
+        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+          <span>{eraLabel}</span>
+          {roster.factionType && (
+            <>
+              <span>|</span>
+              <span>{roster.factionType.replace(/_/g, ' ')}</span>
+            </>
+          )}
+          {roster.factionSlug && (
+            <span className="text-xs">({roster.factionSlug})</span>
+          )}
+        </div>
+        <div className="flex gap-4 text-sm">
+          <span>Budget: <span className="font-mono font-semibold">{roster.bvBudget}</span></span>
+          <span>Used: <span className="font-mono font-semibold">{roster.bvUsed}</span> ({pct}%)</span>
+          <span>Remaining: <span className="font-mono font-semibold">{roster.bvRemaining}</span></span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8">#</TableHead>
+              <TableHead>Unit</TableHead>
+              <TableHead>Variant</TableHead>
+              <TableHead className="text-right">Tons</TableHead>
+              <TableHead className="text-center">Pilot</TableHead>
+              <TableHead className="text-right">BV</TableHead>
+              <TableHead className="text-right">Adj BV</TableHead>
+              <TableHead>Role</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {roster.entries.map((entry, i) => {
+              const wc = weightClassFromTonnage(entry.unit.tonnage)
+              return (
+                <TableRow key={i} className={`border-l-2 ${WEIGHT_CLASS_BG[wc]}`}>
+                  <TableCell className="font-mono text-muted-foreground">{i + 1}</TableCell>
+                  <TableCell className="font-medium">{entry.unit.fullName}</TableCell>
+                  <TableCell className="text-muted-foreground">{entry.unit.variant}</TableCell>
+                  <TableCell className="text-right font-mono">{Math.floor(entry.unit.tonnage)}</TableCell>
+                  <TableCell className="text-center font-mono">{entry.gunnery}/{entry.piloting}</TableCell>
+                  <TableCell className="text-right font-mono">{entry.baseBv}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold">{entry.adjustedBv}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={WEIGHT_CLASS_COLORS[wc]}>
+                      {entry.unit.role ?? '-'}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell />
+              <TableCell className="font-semibold">TOTAL</TableCell>
+              <TableCell />
+              <TableCell className="text-right font-mono font-semibold">{Math.floor(roster.totalTonnage)}</TableCell>
+              <TableCell />
+              <TableCell className="text-right font-mono">{roster.entries.reduce((s, e) => s + e.baseBv, 0)}</TableCell>
+              <TableCell className="text-right font-mono font-semibold">{roster.bvUsed}</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    </div>
+  )
+}
