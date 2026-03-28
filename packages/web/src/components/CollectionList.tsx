@@ -32,6 +32,7 @@ export function CollectionList({
   const handleCreate = () => {
     if (!newName.trim()) return
     onCreate(newName.trim(), newType)
+    setFilter(newType)
     setNewName('')
     setShowCreate(false)
   }
