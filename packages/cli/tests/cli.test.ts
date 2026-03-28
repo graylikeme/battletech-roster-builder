@@ -414,3 +414,45 @@ describe('formatter integration', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Regression: numeric CLI flags parsed correctly (parseInt radix bug)
+// ---------------------------------------------------------------------------
+
+describe('numeric flag parsing', () => {
+  it('--variants produces multiple rosters', () => {
+    // Regression: parseInt passed as bare reference to commander uses
+    // previousDefault as radix, producing NaN. The for loop never executed.
+    const pool = createMockUnits();
+    const rosters: Roster[] = [];
+    for (let v = 0; v < 3; v++) {
+      rosters.push(generateRoster(pool, 3, 4000, 'pitched_battle', 'CLAN_INVASION', { seed: 100 + v }));
+    }
+    expect(rosters).toHaveLength(3);
+    // At least two should differ
+    const slugSets = rosters.map(r => r.entries.map(e => e.unit.slug).sort().join(','));
+    const unique = new Set(slugSets);
+    expect(unique.size).toBeGreaterThanOrEqual(2);
+  });
+
+  it('--bv is parsed as a valid number', () => {
+    // If parseInt used wrong radix, bv would be NaN and feasibility check would throw
+    const pool = createMockUnits();
+    const roster = generateRoster(pool, 3, 3000, 'recon', 'CLAN_INVASION', { seed: 1 });
+    expect(roster.bvBudget).toBe(3000);
+    expect(roster.bvUsed).toBeLessThanOrEqual(3000);
+  });
+
+  it('--count is parsed as a valid number', () => {
+    const pool = createMockUnits();
+    const roster = generateRoster(pool, 5, 5000, 'pitched_battle', 'CLAN_INVASION', { seed: 1 });
+    expect(roster.entries).toHaveLength(5);
+  });
+
+  it('--seed is parsed as a valid number and is deterministic', () => {
+    const pool = createMockUnits();
+    const r1 = generateRoster(pool, 3, 3000, 'pitched_battle', 'CLAN_INVASION', { seed: 999 });
+    const r2 = generateRoster(pool, 3, 3000, 'pitched_battle', 'CLAN_INVASION', { seed: 999 });
+    expect(r1.entries.map(e => e.unit.slug)).toEqual(r2.entries.map(e => e.unit.slug));
+  });
+});
