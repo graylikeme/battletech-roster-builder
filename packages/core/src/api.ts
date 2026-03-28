@@ -1,4 +1,4 @@
-import { allowedRulesLevels, type Unit, type UnitFilters, type FactionType } from './models.js';
+import { type Unit, type UnitFilters, type FactionType } from './models.js';
 
 let apiUrl = 'https://api.battledroids.ru/graphql';
 
