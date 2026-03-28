@@ -18,6 +18,7 @@ import {
   createCollection,
   type Collection,
   type CollectionEntry,
+  type CollectionType,
 } from '@/services/collections'
 
 export function App() {
@@ -28,6 +29,7 @@ export function App() {
 
   const [activeTab, setActiveTab] = useState<'generate' | 'collections'>('generate')
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
+  const [collectionTypeFilter, setCollectionTypeFilter] = useState<CollectionType | 'all'>('all')
   const [showBrowser, setShowBrowser] = useState(false)
   const [saveRoster, setSaveRoster] = useState<Roster | null>(null)
 
@@ -55,6 +57,7 @@ export function App() {
     c.bvBudget = saveRoster.bvBudget
     save(c)
     setSelectedCollection(c)
+    setCollectionTypeFilter('roster')
     setActiveTab('collections')
   }
 
@@ -65,7 +68,10 @@ export function App() {
       addEntry(collectionId, entry)
     }
     const updated = collections.find(c => c.id === collectionId)
-    if (updated) setSelectedCollection(updated)
+    if (updated) {
+      setSelectedCollection(updated)
+      setCollectionTypeFilter(updated.collectionType)
+    }
     setActiveTab('collections')
   }
 
@@ -144,6 +150,7 @@ export function App() {
                   onCreate={(name, type) => { const c = create(name, type); setSelectedCollection(c) }}
                   onSelect={setSelectedCollection}
                   selectedId={currentCollection?.id}
+                  typeFilter={collectionTypeFilter}
                 />
               </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Collection, CollectionType } from '@/services/collections'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -17,12 +17,18 @@ interface CollectionListProps {
   onCreate: (name: string, type: CollectionType) => void
   onSelect: (collection: Collection) => void
   selectedId?: string
+  typeFilter?: CollectionType | 'all'
 }
 
 export function CollectionList({
-  collections, byType, onCreate, onSelect, selectedId,
+  collections, byType, onCreate, onSelect, selectedId, typeFilter,
 }: CollectionListProps) {
-  const [filter, setFilter] = useState<CollectionType | 'all'>('all')
+  const [filter, setFilter] = useState<CollectionType | 'all'>(typeFilter ?? 'all')
+
+  // Allow parent to override the filter
+  useEffect(() => {
+    if (typeFilter) setFilter(typeFilter)
+  }, [typeFilter])
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
   const [newType, setNewType] = useState<CollectionType>('mech_collection')
