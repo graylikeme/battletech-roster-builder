@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { weightClassFromTonnage, MISSION_PROFILES, type Roster } from '@bt-roster/core'
 import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { MechDetailCard } from './MechDetailCard'
 
 const WEIGHT_CLASS_COLORS: Record<string, string> = {
   LIGHT: 'text-blue-400',
@@ -23,6 +25,7 @@ interface RosterDisplayProps {
 }
 
 export function RosterDisplay({ roster }: RosterDisplayProps) {
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
   const profile = MISSION_PROFILES[roster.mission]
   const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
   const eraLabel = roster.era.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -69,21 +72,38 @@ export function RosterDisplay({ roster }: RosterDisplayProps) {
           <TableBody>
             {roster.entries.map((entry, i) => {
               const wc = weightClassFromTonnage(entry.unit.tonnage)
+              const isExpanded = expandedSlug === entry.unit.slug
               return (
-                <TableRow key={i} className={`border-l-2 ${WEIGHT_CLASS_BG[wc]}`}>
-                  <TableCell className="font-mono text-muted-foreground">{i + 1}</TableCell>
-                  <TableCell className="font-medium">{entry.unit.fullName}</TableCell>
-                  <TableCell className="text-muted-foreground">{entry.unit.variant}</TableCell>
-                  <TableCell className="text-right font-mono">{Math.floor(entry.unit.tonnage)}</TableCell>
-                  <TableCell className="text-center font-mono">{entry.gunnery}/{entry.piloting}</TableCell>
-                  <TableCell className="text-right font-mono">{entry.baseBv}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold">{entry.adjustedBv}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={WEIGHT_CLASS_COLORS[wc]}>
-                      {entry.unit.role ?? '-'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                <>
+                  <TableRow
+                    key={entry.unit.slug}
+                    className={`border-l-2 ${WEIGHT_CLASS_BG[wc]} cursor-pointer hover:bg-accent/50`}
+                    onClick={() => setExpandedSlug(isExpanded ? null : entry.unit.slug)}
+                  >
+                    <TableCell className="font-mono text-muted-foreground">{i + 1}</TableCell>
+                    <TableCell className="font-medium">
+                      {entry.unit.fullName}
+                      <span className="ml-1 text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{entry.unit.variant}</TableCell>
+                    <TableCell className="text-right font-mono">{Math.floor(entry.unit.tonnage)}</TableCell>
+                    <TableCell className="text-center font-mono">{entry.gunnery}/{entry.piloting}</TableCell>
+                    <TableCell className="text-right font-mono">{entry.baseBv}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">{entry.adjustedBv}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={WEIGHT_CLASS_COLORS[wc]}>
+                        {entry.unit.role ?? '-'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                  {isExpanded && (
+                    <TableRow key={`${entry.unit.slug}-detail`}>
+                      <TableCell colSpan={8} className="p-0 bg-muted/30">
+                        <MechDetailCard slug={entry.unit.slug} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               )
             })}
           </TableBody>

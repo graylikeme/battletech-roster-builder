@@ -16,6 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
+import { MechDetailCard } from './MechDetailCard'
 
 const API_URL = import.meta.env.DEV ? '/api/graphql' : 'https://api.battledroids.ru/graphql'
 
@@ -123,6 +124,7 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
   const [cursor, setCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [addedSlug, setAddedSlug] = useState<string | null>(null)
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingRef = useRef(false)
@@ -304,34 +306,49 @@ export function MechBrowser({ open, onClose, onAddEntry, eras, factions }: MechB
                   let wc: string
                   try { wc = weightClassFromTonnage(unit.tonnage) } catch { wc = 'MEDIUM' }
                   const justAdded = addedSlug === unit.slug
+                  const isExpanded = expandedSlug === unit.slug
 
                   return (
-                    <TableRow key={unit.slug} className={justAdded ? 'bg-green-500/10' : ''}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
-                          {unit.fullName}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">{Math.floor(unit.tonnage)}</TableCell>
-                      <TableCell className="text-right font-mono">{unit.bv}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`text-xs ${WEIGHT_CLASS_COLORS[wc] ?? ''}`}>
-                          {unit.role ?? '-'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{unit.techBase.replace(/_/g, ' ')}</TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant={justAdded ? 'default' : 'outline'}
-                          className="h-7 text-xs"
-                          onClick={() => addUnit(unit)}
-                        >
-                          {justAdded ? 'Added!' : 'Add'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <>
+                      <TableRow
+                        key={unit.slug}
+                        className={`cursor-pointer hover:bg-accent/50 ${justAdded ? 'bg-green-500/10' : ''}`}
+                        onClick={() => setExpandedSlug(isExpanded ? null : unit.slug)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-1 h-6 rounded-full shrink-0 ${WEIGHT_CLASS_BAR[wc] ?? ''}`} />
+                            {unit.fullName}
+                            <span className="text-xs text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">{Math.floor(unit.tonnage)}</TableCell>
+                        <TableCell className="text-right font-mono">{unit.bv}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-xs ${WEIGHT_CLASS_COLORS[wc] ?? ''}`}>
+                            {unit.role ?? '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{unit.techBase.replace(/_/g, ' ')}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant={justAdded ? 'default' : 'outline'}
+                            className="h-7 text-xs"
+                            onClick={e => { e.stopPropagation(); addUnit(unit) }}
+                          >
+                            {justAdded ? 'Added!' : 'Add'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow key={`${unit.slug}-detail`}>
+                          <TableCell colSpan={6} className="p-0 bg-muted/30">
+                            <MechDetailCard slug={unit.slug} />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   )
                 })}
               </TableBody>
