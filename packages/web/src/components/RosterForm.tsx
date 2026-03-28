@@ -41,18 +41,18 @@ export function RosterForm({ form, setField, isValid, eras, factionsByType, coll
       <div className="space-y-2">
         <Label>Unit Source</Label>
         <Select value={form.unitSource} onValueChange={v => setField('unitSource', (v ?? 'api') as 'api' | 'collection')}>
-          <SelectTrigger>{form.unitSource === 'api' ? 'BattleDroids API' : 'Collection'}</SelectTrigger>
+          <SelectTrigger>{form.unitSource === 'api' ? 'All mechs (API)' : 'My mech pool'}</SelectTrigger>
           <SelectContent>
-            <SelectItem value="api">BattleDroids API</SelectItem>
-            <SelectItem value="collection">Collection</SelectItem>
+            <SelectItem value="api">All mechs (API)</SelectItem>
+            <SelectItem value="collection">My mech pool</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Collection Picker */}
+      {/* Mech Pool Picker */}
       {form.unitSource === 'collection' && (
         <div className="space-y-2">
-          <Label>Collection</Label>
+          <Label>Mech Pool</Label>
           {mechPools.length === 0 ? (
             <p className="text-xs text-muted-foreground">No mech pools yet. Create one in the Collections tab.</p>
           ) : (
