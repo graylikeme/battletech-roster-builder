@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   createCollection,
-  saveCollection,
   type Collection,
   type CollectionEntry,
 } from '@/services/collections'
@@ -25,7 +24,7 @@ export function App() {
   const { eras, factions, factionsByType, loading: refLoading, error: refError } = useReferenceData()
   const { form, setField, isValid } = useFormState()
   const { status, progress, rosters, error, generate } = useRosterGenerator()
-  const { collections, byType, create, remove, rename, changeType, addEntry, removeEntry, updateEntry, toggleChassisProxy } = useCollections()
+  const { collections, byType, create, save, remove, rename, changeType, addEntry, removeEntry, updateEntry, toggleChassisProxy } = useCollections()
 
   const [activeTab, setActiveTab] = useState<'generate' | 'collections'>('generate')
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null)
@@ -54,10 +53,9 @@ export function App() {
     c.mission = saveRoster.mission
     c.era = saveRoster.era
     c.bvBudget = saveRoster.bvBudget
-    saveCollection(c)
-    // Trigger refresh by calling create (which calls refresh internally)
-    // Actually, we need to just reload
-    window.location.reload() // Simple approach
+    save(c)
+    setSelectedCollection(c)
+    setActiveTab('collections')
   }
 
   const handleSaveRosterExisting = (collectionId: string) => {
@@ -66,6 +64,9 @@ export function App() {
     for (const entry of entries) {
       addEntry(collectionId, entry)
     }
+    const updated = collections.find(c => c.id === collectionId)
+    if (updated) setSelectedCollection(updated)
+    setActiveTab('collections')
   }
 
   // Keep selectedCollection in sync with collections state

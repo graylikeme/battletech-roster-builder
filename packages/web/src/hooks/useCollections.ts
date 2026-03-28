@@ -22,6 +22,11 @@ export function useCollections() {
     return c
   }, [refresh])
 
+  const save = useCallback((collection: Collection) => {
+    saveCollection(collection)
+    refresh()
+  }, [refresh])
+
   const remove = useCallback((id: string) => {
     deleteCollectionStorage(id)
     refresh()
@@ -84,6 +89,7 @@ export function useCollections() {
     remove,
     rename,
     changeType,
+    save,
     addEntry,
     removeEntry,
     updateEntry,
