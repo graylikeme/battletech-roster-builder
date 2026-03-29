@@ -141,22 +141,26 @@ export async function fetchUnits(
 const UNIT_DETAIL_QUERY = `
 query UnitDetail($slug: String!) {
   unit(slug: $slug) {
-    slug fullName variant tonnage bv role techBase rulesLevel introYear
+    slug fullName variant tonnage bv cost role techBase rulesLevel introYear
     mechData {
-      walkMp runMp jumpMp engineRating heatSinkCount heatSinkTypeRaw
+      config walkMp runMp jumpMp engineRating heatSinkCount heatSinkTypeRaw
       armorTypeRaw structureTypeRaw
       engine { name } gyro { name } cockpit { name }
     }
     locations { location armorPoints rearArmor structurePoints }
-    loadout { equipmentName quantity location }
+    loadout { equipmentSlug equipmentName quantity location slots isRearFacing notes }
     quirks { name isPositive }
   }
 }`;
 
 export interface LoadoutEntry {
+  equipmentSlug: string;
   equipmentName: string;
   quantity: number;
   location: string;
+  slots: number[] | null;
+  isRearFacing: boolean;
+  notes: string | null;
 }
 
 export interface LocationEntry {
@@ -177,10 +181,12 @@ export interface MechDetail {
   variant: string;
   tonnage: number;
   bv: number;
+  cost: number | null;
   role: string | null;
   techBase: string;
   rulesLevel: string;
   introYear?: number;
+  config?: string;
   walkMp?: number;
   runMp?: number;
   jumpMp?: number;
@@ -216,10 +222,12 @@ export async function fetchUnitDetail(slug: string): Promise<MechDetail> {
     variant: (u.variant as string) ?? '',
     tonnage: u.tonnage as number,
     bv: u.bv as number,
+    cost: (u.cost as number) ?? null,
     role: (u.role as string) ?? null,
     techBase: (u.techBase as string) ?? '',
     rulesLevel: (u.rulesLevel as string) ?? '',
     introYear: u.introYear as number | undefined,
+    config: md.config as string | undefined,
     walkMp: md.walkMp as number | undefined,
     runMp: md.runMp as number | undefined,
     jumpMp: md.jumpMp as number | undefined,
@@ -324,4 +332,88 @@ export interface EraInfo {
 export async function fetchEras(): Promise<EraInfo[]> {
   const data = await executeQuery(ERAS_QUERY);
   return data.allEras as EraInfo[];
+}
+
+// ---------------------------------------------------------------------------
+// Equipment details (weapon stats, ammo)
+// ---------------------------------------------------------------------------
+
+const EQUIPMENT_DETAIL_QUERY = `
+query EquipmentDetail($slug: String!) {
+  equipment(slug: $slug) {
+    slug name category heat damage
+    rangeMin rangeShort rangeMedium rangeLong
+    crits tonnage shotsPerTon
+  }
+}`;
+
+export interface EquipmentDetail {
+  slug: string;
+  name: string;
+  category: string;
+  heat: number | null;
+  damage: string | null;
+  rangeMin: number | null;
+  rangeShort: number | null;
+  rangeMedium: number | null;
+  rangeLong: number | null;
+  crits: number | null;
+  tonnage: number | null;
+  shotsPerTon: number | null;
+}
+
+const equipmentCache = new Map<string, EquipmentDetail>();
+
+export async function fetchEquipmentDetail(slug: string): Promise<EquipmentDetail> {
+  const cached = equipmentCache.get(slug);
+  if (cached) return cached;
+
+  const data = await executeQuery(EQUIPMENT_DETAIL_QUERY, { slug });
+  const eq = data.equipment as EquipmentDetail;
+  equipmentCache.set(slug, eq);
+  return eq;
+}
+
+export async function fetchEquipmentDetails(slugs: string[]): Promise<Map<string, EquipmentDetail>> {
+  const unique = [...new Set(slugs)];
+  const results = new Map<string, EquipmentDetail>();
+
+  await Promise.all(unique.map(async (slug) => {
+    const detail = await fetchEquipmentDetail(slug);
+    results.set(slug, detail);
+  }));
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Internal structure by tonnage
+// ---------------------------------------------------------------------------
+
+const INTERNAL_STRUCTURE_QUERY = `
+query InternalStructure($tonnage: Int!) {
+  internalStructure(tonnage: $tonnage) {
+    tonnage head centerTorso sideTorso arm leg
+  }
+}`;
+
+export interface InternalStructure {
+  tonnage: number;
+  head: number;
+  centerTorso: number;
+  sideTorso: number;
+  arm: number;
+  leg: number;
+}
+
+const isCache = new Map<number, InternalStructure>();
+
+export async function fetchInternalStructure(tonnage: number): Promise<InternalStructure> {
+  const cached = isCache.get(tonnage);
+  if (cached) return cached;
+
+  const data = await executeQuery(INTERNAL_STRUCTURE_QUERY, { tonnage });
+  const is = data.internalStructure as InternalStructure;
+  isCache.set(tonnage, is);
+  return is;
 }
