@@ -56,5 +56,5 @@ export function beginChartScale(doc: jsPDF): void {
  */
 export function drawChartOverlay(doc: jsPDF, chartImage: string): void {
   doc.restoreGraphicsState();
-  doc.addImage(chartImage, 'PNG', 0, 0, CANVAS.width, CANVAS.height);
+  doc.addImage(chartImage, 'PNG', 0, 0, CANVAS.width, CANVAS.height, 'chart', 'FAST');
 }

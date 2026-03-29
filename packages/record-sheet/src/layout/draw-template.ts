@@ -10,5 +10,5 @@ import { CANVAS } from '../points/print-consts.js';
  * @param imageData Base64 or data URL of the template PNG
  */
 export function drawTemplate(doc: jsPDF, imageData: string): void {
-  doc.addImage(imageData, 'PNG', 0, 0, CANVAS.width, CANVAS.height);
+  doc.addImage(imageData, 'PNG', 0, 0, CANVAS.width, CANVAS.height, 'template', 'FAST');
 }

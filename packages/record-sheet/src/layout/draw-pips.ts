@@ -88,11 +88,13 @@ function drawPipImage(
   const imageData = loader(filename);
   if (!imageData) return;
 
+  // Use filename as alias so jsPDF deduplicates mirrored left/right images
+  const alias = filename;
+
   if (region.mirror) {
     // jsPDF internal scale factor converts px to PDF points
     const k = (doc as any).internal.scaleFactor as number;
     const px = region.x * k;
-    const pw = region.w * k;
 
     doc.saveGraphicsState();
     // Flip horizontally around the left edge of the placement area:
@@ -104,10 +106,10 @@ function drawPipImage(
     doc.internal.write(
       `${-1} 0 0 1 ${(2 * px).toFixed(4)} 0 cm`,
     );
-    doc.addImage(imageData, 'PNG', region.x, region.y, region.w, region.h);
+    doc.addImage(imageData, 'PNG', region.x, region.y, region.w, region.h, alias, 'FAST');
     doc.restoreGraphicsState();
   } else {
-    doc.addImage(imageData, 'PNG', region.x, region.y, region.w, region.h);
+    doc.addImage(imageData, 'PNG', region.x, region.y, region.w, region.h, alias, 'FAST');
   }
 }
 
