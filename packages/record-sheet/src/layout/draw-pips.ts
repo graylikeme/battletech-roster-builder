@@ -113,6 +113,43 @@ function drawPipImage(
   }
 }
 
+/**
+ * Compute the list of pip pattern filenames needed to render a record sheet.
+ * Returns deduplicated filenames (right-side locations reuse left-side images).
+ */
+export function getRequiredPipFilenames(data: RecordSheetData): string[] {
+  const filenames = new Set<string>();
+
+  // Front armor
+  for (const loc of ['head', 'center_torso', 'left_torso', 'right_torso',
+                      'left_arm', 'right_arm', 'left_leg', 'right_leg'] as MechLocation[]) {
+    const armor = data.armorByLocation.get(loc);
+    if (!armor || armor.front <= 0) continue;
+    const region = ARMOR_REGIONS[loc];
+    if (region) filenames.add(`TW_BP_${region.prefix}${padNumber(armor.front)}.png`);
+  }
+
+  // Rear armor
+  for (const loc of ['center_torso', 'left_torso', 'right_torso'] as MechLocation[]) {
+    const armor = data.armorByLocation.get(loc);
+    if (!armor?.rear || armor.rear <= 0) continue;
+    const rearKey = `${loc}_rear`;
+    const region = ARMOR_REGIONS[rearKey];
+    if (region) filenames.add(`TW_BP_${region.prefix}${padNumber(armor.rear)}.png`);
+  }
+
+  // Internal structure
+  for (const loc of ['head', 'center_torso', 'left_torso', 'right_torso',
+                      'left_arm', 'right_arm', 'left_leg', 'right_leg'] as MechLocation[]) {
+    const structure = data.structureByLocation.get(loc);
+    if (!structure || structure <= 0) continue;
+    const region = INTERNAL_REGIONS[loc];
+    if (region) filenames.add(`TW_BP_${region.prefix}${padNumber(structure)}.png`);
+  }
+
+  return [...filenames];
+}
+
 export function drawPips(
   doc: jsPDF,
   data: RecordSheetData,

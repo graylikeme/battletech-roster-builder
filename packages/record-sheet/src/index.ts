@@ -1,5 +1,6 @@
 export { generateRecordSheet, generateMultiRecordSheet } from './generate-record-sheet.js';
 export type { GenerateOptions } from './generate-record-sheet.js';
+export { getRequiredPipFilenames } from './layout/draw-pips.js';
 export type { PipImageLoader } from './layout/draw-pips.js';
 
 export { buildRecordSheetData, buildRecordSheetDataFromDetail } from './record-sheet-data.js';
