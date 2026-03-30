@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchUnitDetail, type MechDetail } from '@bt-roster/core'
-import { DownloadIcon, PrinterIcon } from 'lucide-react'
+import { DownloadIcon, PrinterIcon, LoaderCircleIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -81,8 +81,9 @@ export function MechDetailCard({ slug, gunnery, piloting }: MechDetailCardProps)
             disabled={isGenerating}
             onClick={e => { e.stopPropagation(); downloadSingle(slug, { gunnery, piloting }) }}
           >
-            <DownloadIcon className="w-3.5 h-3.5 mr-1" />
-            {isGenerating ? 'Generating...' : 'Record Sheet'}
+            {isGenerating
+              ? <LoaderCircleIcon className="w-3.5 h-3.5 animate-spin" />
+              : <DownloadIcon className="w-3.5 h-3.5" />}
           </Button>
           <Button
             size="sm" variant="ghost"

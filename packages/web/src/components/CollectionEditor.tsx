@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { weightClassFromTonnage, adjustedBv } from '@bt-roster/core'
-import { DownloadIcon, PrinterIcon } from 'lucide-react'
+import { DownloadIcon, PrinterIcon, LoaderCircleIcon } from 'lucide-react'
 import type { Collection, CollectionEntry } from '@/services/collections'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -109,10 +109,9 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                   `${collection.name.toLowerCase().replace(/\s+/g, '-')}.pdf`,
                 )}
               >
-                <DownloadIcon className="w-3.5 h-3.5 mr-1" />
-                {isGenerating && progress
-                  ? `Generating ${progress.current}/${progress.total}...`
-                  : 'Download Sheets'}
+                {isGenerating
+                  ? <LoaderCircleIcon className="w-3.5 h-3.5 animate-spin" />
+                  : <DownloadIcon className="w-3.5 h-3.5" />}
               </Button>
               <Button
                 size="sm" variant="outline"
