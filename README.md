@@ -195,7 +195,7 @@ battletech-roster-builder/
 
 **@bt-roster/cli** -- Command-line interface built on Commander.js. Handles argument parsing, progress output, and tabular formatting.
 
-**@bt-roster/record-sheet** -- PDF record sheet generator using jsPDF. Renders Total Warfare biped record sheets with armor/structure pips, critical slots, weapons tables, and optional chart overlays. Ported from [Solaris Skunk Werks](https://github.com/sswlib/SSW) (BSD) including template images, pip patterns, and layout coordinates.
+**@bt-roster/record-sheet** -- PDF record sheet generator using jsPDF. Renders Total Warfare biped record sheets with armor/structure pips, critical slots, weapons tables, and optional chart overlays. Ported from [Solaris Skunk Werks](https://github.com/sswlib/SSW) (BSD) including template images, pip patterns, and layout coordinates. Template and pip pattern images are hosted on S3 at `https://resources.battledroids.ru/roster/` (templates in `templates/`, pip patterns in `patterns/`).
 
 **@bt-roster/web** -- React 19 SPA with shadcn/ui components and Tailwind CSS dark theme. Roster generation, collections management, mech browsing with detail views.
 
