@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import { fetchUnitDetail, type MechDetail } from '@bt-roster/core'
+import { DownloadIcon, PrinterIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useRecordSheet } from '@/hooks/useRecordSheet'
 
 interface MechDetailCardProps {
   slug: string
+  gunnery?: number
+  piloting?: number
 }
 
 const LOCATION_ORDER = [
@@ -20,10 +25,11 @@ function formatQuirk(name: string): string {
   return name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
-export function MechDetailCard({ slug }: MechDetailCardProps) {
+export function MechDetailCard({ slug, gunnery, piloting }: MechDetailCardProps) {
   const [detail, setDetail] = useState<MechDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { downloadSingle, printSingle, isGenerating } = useRecordSheet()
 
   useEffect(() => {
     let cancelled = false
@@ -61,10 +67,31 @@ export function MechDetailCard({ slug }: MechDetailCardProps) {
   return (
     <div className="space-y-3 p-3 text-sm">
       {/* Header */}
-      <div>
-        <div className="font-semibold">{detail.fullName}</div>
-        <div className="text-xs text-muted-foreground">
-          {detail.tonnage}t {detail.techBase.replace(/_/g, ' ')} | {detail.rulesLevel} | Intro: {detail.introYear ?? '?'}
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="font-semibold">{detail.fullName}</div>
+          <div className="text-xs text-muted-foreground">
+            {detail.tonnage}t {detail.techBase.replace(/_/g, ' ')} | {detail.rulesLevel} | Intro: {detail.introYear ?? '?'}
+          </div>
+        </div>
+        <div className="flex gap-1 shrink-0">
+          <Button
+            size="sm" variant="ghost"
+            className="h-7 px-2 text-xs"
+            disabled={isGenerating}
+            onClick={e => { e.stopPropagation(); downloadSingle(slug, { gunnery, piloting }) }}
+          >
+            <DownloadIcon className="w-3.5 h-3.5 mr-1" />
+            {isGenerating ? 'Generating...' : 'Record Sheet'}
+          </Button>
+          <Button
+            size="sm" variant="ghost"
+            className="h-7 px-2 text-xs"
+            disabled={isGenerating}
+            onClick={e => { e.stopPropagation(); printSingle(slug, { gunnery, piloting }) }}
+          >
+            <PrinterIcon className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { weightClassFromTonnage, adjustedBv } from '@bt-roster/core'
+import { DownloadIcon, PrinterIcon } from 'lucide-react'
 import type { Collection, CollectionEntry } from '@/services/collections'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { MechDetailCard } from './MechDetailCard'
+import { useRecordSheet } from '@/hooks/useRecordSheet'
 
 const WEIGHT_CLASS_COLORS: Record<string, string> = {
   LIGHT: 'text-blue-400',
@@ -66,6 +68,7 @@ function groupByChassis(entries: CollectionEntry[]): ChassisGroup[] {
 
 export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onBrowseMechs, onToggleChassisProxy, onRename, onChangeType, onDelete }: CollectionEditorProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+  const { downloadRoster, printRoster, isGenerating, progress } = useRecordSheet()
   const isProxy = collection.chassisProxy && collection.collectionType === 'mech_collection'
   const colSpan = collection.collectionType === 'roster' ? 7 : 5
   const totalBv = collection.entries.reduce((sum, e) => sum + e.unitRef.bv, 0)
@@ -91,7 +94,43 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
             {collection.collectionType === 'roster' && totalAdjBv !== totalBv && ` (${totalAdjBv} adj)`}
           </p>
         </div>
-        <Button size="sm" onClick={onBrowseMechs}>Add Mechs</Button>
+        <div className="flex gap-2">
+          {collection.collectionType === 'roster' && collection.entries.length > 0 && (
+            <>
+              <Button
+                size="sm" variant="outline"
+                disabled={isGenerating}
+                onClick={() => downloadRoster(
+                  collection.entries.map(e => ({
+                    slug: e.unitRef.slug,
+                    gunnery: e.gunnery ?? 4,
+                    piloting: e.piloting ?? 5,
+                  })),
+                  `${collection.name.toLowerCase().replace(/\s+/g, '-')}.pdf`,
+                )}
+              >
+                <DownloadIcon className="w-3.5 h-3.5 mr-1" />
+                {isGenerating && progress
+                  ? `Generating ${progress.current}/${progress.total}...`
+                  : 'Download Sheets'}
+              </Button>
+              <Button
+                size="sm" variant="outline"
+                disabled={isGenerating}
+                onClick={() => printRoster(
+                  collection.entries.map(e => ({
+                    slug: e.unitRef.slug,
+                    gunnery: e.gunnery ?? 4,
+                    piloting: e.piloting ?? 5,
+                  })),
+                )}
+              >
+                <PrinterIcon className="w-3.5 h-3.5" />
+              </Button>
+            </>
+          )}
+          <Button size="sm" onClick={onBrowseMechs}>Add Mechs</Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -271,7 +310,7 @@ export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onB
                 {isExpanded && (
                   <TableRow key={`${entry.unitRef.slug}-detail`}>
                     <TableCell colSpan={colSpan} className="p-0 bg-muted/30">
-                      <MechDetailCard slug={entry.unitRef.slug} />
+                      <MechDetailCard slug={entry.unitRef.slug} gunnery={entry.gunnery} piloting={entry.piloting} />
                     </TableCell>
                   </TableRow>
                 )}

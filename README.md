@@ -37,6 +37,7 @@ npm run web:dev
 - **Mech details** -- Click any mech name (in rosters, collections, or the browser) to expand an inline panel showing full loadout by location, armor distribution, engine, heat sinks, and quirks. Data is lazy-loaded from the API and cached.
 - **Chassis proxy mode** -- Toggle per collection. When enabled, each mech represents any variant of its chassis during generation (for tabletop miniature proxying). The number of miniatures per chassis limits how many picks the generator can make. Collection view switches to a grouped chassis display showing name, tonnage, and mini count.
 - **Collection-based generation** -- Select a mech pool as the unit source in the roster form. Generation is instant (no API fetch) unless chassis proxy needs to expand variants. Advanced filters (tech base, BV range) still apply client-side.
+- **Record sheets** -- Download or print Total Warfare record sheet PDFs. Available per-mech from the detail panel (with pilot skills if in a roster), or as a multi-page PDF for an entire roster. Template and pip pattern assets load from S3 and are cached for the session.
 - **Export/Import** -- Save all collections to a JSON file for backup or transfer between devices. Import replaces all current collections (with confirmation when data exists).
 - **Persistent UI state** -- Form fields, generated rosters, active tab, selected collection, and type filter all survive page refresh (sessionStorage).
 
@@ -150,7 +151,7 @@ battletech-roster-builder/
         generator.ts              # Roster generation (seeded PRNG, multi-pass selection)
         api.ts                    # BattleDroids GraphQL client (paginated, rate-limited)
         utils.ts                  # Shared utilities (BV filter bounds)
-      tests/                      # 85 tests
+      tests/                      # 79 tests
     cli/                          # @bt-roster/cli -- command-line interface
       src/
         cli.ts                    # Commander.js argument parsing
@@ -164,7 +165,7 @@ battletech-roster-builder/
         layout/                   # Drawing modules (template, pips, crits, text, heat, charts)
         points/                   # Pixel coordinates and font/layout constants
       assets/                     # Template PNGs, chart overlays, 374 pip pattern images
-      tests/                      # 34 tests
+      tests/                      # 39 tests
     web/                          # @bt-roster/web -- React web app
       src/
         App.tsx                   # Main layout with Generate/Collections tabs
@@ -184,9 +185,12 @@ battletech-roster-builder/
           useReferenceData.ts     # Fetches eras/factions on mount
           useRosterGenerator.ts   # Fetch + generate pipeline
           useCollections.ts       # Collection CRUD + localStorage sync
+          useRecordSheet.ts       # PDF generation state management
         services/
           collections.ts          # localStorage persistence for collections
-      tests/                      # 18 tests
+          record-sheet-assets.ts  # S3 asset fetching and caching for record sheets
+          record-sheet-generator.ts # PDF generation orchestration
+      tests/                      # 32 tests
 ```
 
 ### Package Responsibilities
@@ -225,20 +229,20 @@ npm run web:build
 ### Running Tests
 
 ```bash
-# All core tests (85 tests)
+# All core tests (79 tests)
 npm test
 
 # CLI integration tests (30 tests)
 npm -w @bt-roster/cli test
 
-# Web tests (18 tests)
+# Web tests (32 tests)
 npm -w @bt-roster/web test
 
 # Watch mode
 npm -w @bt-roster/core run test:watch
 ```
 
-167 tests total. Tests use [Vitest](https://vitest.dev/).
+180 tests total. Tests use [Vitest](https://vitest.dev/).
 
 ### Tech Stack
 

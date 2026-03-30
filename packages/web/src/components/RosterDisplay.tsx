@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { weightClassFromTonnage, MISSION_PROFILES, type Roster } from '@bt-roster/core'
+import { DownloadIcon, PrinterIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { MechDetailCard } from './MechDetailCard'
+import { useRecordSheet } from '@/hooks/useRecordSheet'
 
 const WEIGHT_CLASS_COLORS: Record<string, string> = {
   LIGHT: 'text-blue-400',
@@ -29,6 +31,7 @@ interface RosterDisplayProps {
 
 export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
+  const { downloadRoster, printRoster, isGenerating, progress } = useRecordSheet()
   const profile = MISSION_PROFILES[roster.mission]
   const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
   const eraLabel = roster.era.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
@@ -39,7 +42,31 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">{profile.name}</h3>
-          {onSave && <Button size="sm" onClick={onSave}>Save Roster</Button>}
+          <div className="flex gap-2">
+            <Button
+              size="sm" variant="outline"
+              disabled={isGenerating}
+              onClick={() => downloadRoster(
+                roster.entries.map(e => ({ slug: e.unit.slug, gunnery: e.gunnery, piloting: e.piloting })),
+                `roster-${roster.mission}.pdf`,
+              )}
+            >
+              <DownloadIcon className="w-3.5 h-3.5 mr-1" />
+              {isGenerating && progress
+                ? `Generating ${progress.current}/${progress.total}...`
+                : 'Download Sheets'}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              disabled={isGenerating}
+              onClick={() => printRoster(
+                roster.entries.map(e => ({ slug: e.unit.slug, gunnery: e.gunnery, piloting: e.piloting })),
+              )}
+            >
+              <PrinterIcon className="w-3.5 h-3.5" />
+            </Button>
+            {onSave && <Button size="sm" onClick={onSave}>Save Roster</Button>}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           <span>{eraLabel}</span>
@@ -112,7 +139,7 @@ export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayP
                   {isExpanded && (
                     <TableRow key={`${entry.unit.slug}-detail`}>
                       <TableCell colSpan={7} className="p-0 bg-muted/30">
-                        <MechDetailCard slug={entry.unit.slug} />
+                        <MechDetailCard slug={entry.unit.slug} gunnery={entry.gunnery} piloting={entry.piloting} />
                       </TableCell>
                     </TableRow>
                   )}
