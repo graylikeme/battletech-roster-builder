@@ -68,7 +68,7 @@ function groupByChassis(entries: CollectionEntry[]): ChassisGroup[] {
 
 export function CollectionEditor({ collection, onRemoveEntry, onUpdateEntry, onBrowseMechs, onToggleChassisProxy, onRename, onChangeType, onDelete }: CollectionEditorProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
-  const { downloadRoster, printRoster, isGenerating, progress } = useRecordSheet()
+  const { downloadRoster, printRoster, isGenerating } = useRecordSheet()
   const isProxy = collection.chassisProxy && collection.collectionType === 'mech_collection'
   const colSpan = collection.collectionType === 'roster' ? 7 : 5
   const totalBv = collection.entries.reduce((sum, e) => sum + e.unitRef.bv, 0)

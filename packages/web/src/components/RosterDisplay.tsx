@@ -31,7 +31,7 @@ interface RosterDisplayProps {
 
 export function RosterDisplay({ roster, requestedCount, onSave }: RosterDisplayProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null)
-  const { downloadRoster, printRoster, isGenerating, progress } = useRecordSheet()
+  const { downloadRoster, printRoster, isGenerating } = useRecordSheet()
   const profile = MISSION_PROFILES[roster.mission]
   const pct = roster.bvBudget > 0 ? (roster.bvUsed / roster.bvBudget * 100).toFixed(1) : '0.0'
   const eraLabel = roster.era.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
