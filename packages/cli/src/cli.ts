@@ -6,7 +6,7 @@ import {
   type Era, type Mission, type FactionType, type TechBase, type RulesLevel, type UnitFilters,
   fetchUnits, fetchEras, fetchFactions,
   generateRoster,
-  effectiveRulesLevel, computeBvFilterBounds,
+  computeBvFilterBounds,
 } from '@bt-roster/core';
 import { formatRoster, formatMissionsList, formatErasList, formatFactionsList } from './formatter.js';
 
@@ -81,14 +81,7 @@ async function run(opts: Record<string, unknown>) {
     const count = opts.count as number;
     const factionType = opts.factionType as FactionType | undefined;
     const techBase = opts.techBase as TechBase | undefined;
-    // Clan tech auto-bumps rules level
-    const { rulesLevel, wasBumped } = effectiveRulesLevel(
-      techBase,
-      opts.rulesLevel as RulesLevel,
-    );
-    if (wasBumped) {
-      process.stderr.write('Note: Clan tech requires Advanced rules level, auto-adjusted.\n');
-    }
+    const rulesLevel = opts.rulesLevel as RulesLevel;
 
     // Pilot skills
     let gunnery = 4, piloting = 5;

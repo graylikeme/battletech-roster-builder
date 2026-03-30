@@ -1,43 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { effectiveRulesLevel, computeBvFilterBounds } from '../src/utils.js';
-
-describe('effectiveRulesLevel', () => {
-  it('bumps STANDARD to ADVANCED for Clan tech', () => {
-    const result = effectiveRulesLevel('CLAN', 'STANDARD');
-    expect(result.rulesLevel).toBe('ADVANCED');
-    expect(result.wasBumped).toBe(true);
-  });
-
-  it('bumps INTRODUCTORY to ADVANCED for Clan tech', () => {
-    const result = effectiveRulesLevel('CLAN', 'INTRODUCTORY');
-    expect(result.rulesLevel).toBe('ADVANCED');
-    expect(result.wasBumped).toBe(true);
-  });
-
-  it('does not bump ADVANCED for Clan tech', () => {
-    const result = effectiveRulesLevel('CLAN', 'ADVANCED');
-    expect(result.rulesLevel).toBe('ADVANCED');
-    expect(result.wasBumped).toBe(false);
-  });
-
-  it('does not bump EXPERIMENTAL for Clan tech', () => {
-    const result = effectiveRulesLevel('CLAN', 'EXPERIMENTAL');
-    expect(result.rulesLevel).toBe('EXPERIMENTAL');
-    expect(result.wasBumped).toBe(false);
-  });
-
-  it('does not bump for Inner Sphere', () => {
-    const result = effectiveRulesLevel('INNER_SPHERE', 'STANDARD');
-    expect(result.rulesLevel).toBe('STANDARD');
-    expect(result.wasBumped).toBe(false);
-  });
-
-  it('does not bump when tech base is undefined', () => {
-    const result = effectiveRulesLevel(undefined, 'STANDARD');
-    expect(result.rulesLevel).toBe('STANDARD');
-    expect(result.wasBumped).toBe(false);
-  });
-});
+import { computeBvFilterBounds } from '../src/utils.js';
 
 describe('computeBvFilterBounds', () => {
   it('computes correct bounds for typical values', () => {

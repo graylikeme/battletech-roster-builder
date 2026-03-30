@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import {
   fetchUnits, generateRoster,
-  effectiveRulesLevel, computeBvFilterBounds, allowedRulesLevels,
+  computeBvFilterBounds, allowedRulesLevels,
   fetchUnitChassisSlug, fetchChassisVariants,
   type Roster, type FetchProgress, type UnitFilters, type Unit,
 } from '@bt-roster/core'
@@ -42,7 +42,7 @@ export function useRosterGenerator() {
       let units: Unit[]
       let chassisGroupsMap: Map<string, string> | undefined
       const techBase = form.techBase || undefined
-      const { rulesLevel } = effectiveRulesLevel(techBase, form.rulesLevel)
+      const rulesLevel = form.rulesLevel
 
       if (form.unitSource === 'collection') {
         // Use collection as unit source — no API fetch needed

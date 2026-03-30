@@ -131,7 +131,7 @@ The `--rules-level` flag sets the maximum allowed rules level. The hierarchy is 
 INTRODUCTORY < STANDARD < ADVANCED < EXPERIMENTAL
 ```
 
-`UNOFFICIAL` is standalone and includes everything. Default is `STANDARD`. Clan tech auto-bumps to `ADVANCED`.
+`UNOFFICIAL` is standalone and includes everything. Default is `STANDARD`.
 
 The BattleDroids API supports hierarchical rules level filtering server-side on both `units` and `chassis.variants` queries. The filter is available in the web app's roster form (Advanced Filters), mech browser, and collection-based generation.
 
@@ -149,13 +149,22 @@ battletech-roster-builder/
         pilots.ts                 # BV skill multiplier table, auto-assignment engine
         generator.ts              # Roster generation (seeded PRNG, multi-pass selection)
         api.ts                    # BattleDroids GraphQL client (paginated, rate-limited)
-        utils.ts                  # Shared utilities (rules level bump, BV filter bounds)
+        utils.ts                  # Shared utilities (BV filter bounds)
       tests/                      # 85 tests
     cli/                          # @bt-roster/cli -- command-line interface
       src/
         cli.ts                    # Commander.js argument parsing
         formatter.ts              # Terminal table output
       tests/                      # 30 tests
+    record-sheet/                   # @bt-roster/record-sheet -- PDF record sheet generation
+      src/
+        index.ts                  # Public API (generate, build data)
+        generate-record-sheet.ts  # PDF rendering pipeline (jsPDF)
+        record-sheet-data.ts      # Mech data resolution from core API
+        layout/                   # Drawing modules (template, pips, crits, text, heat, charts)
+        points/                   # Pixel coordinates and font/layout constants
+      assets/                     # Template PNGs, chart overlays, 374 pip pattern images
+      tests/                      # 34 tests
     web/                          # @bt-roster/web -- React web app
       src/
         App.tsx                   # Main layout with Generate/Collections tabs
@@ -185,6 +194,8 @@ battletech-roster-builder/
 **@bt-roster/core** -- Zero-dependency shared module containing all domain logic: data models, mission profiles, pilot skill calculations, roster generation algorithm, and BattleDroids API client. Works in both Node.js and browser.
 
 **@bt-roster/cli** -- Command-line interface built on Commander.js. Handles argument parsing, progress output, and tabular formatting.
+
+**@bt-roster/record-sheet** -- PDF record sheet generator using jsPDF. Renders Total Warfare biped record sheets with armor/structure pips, critical slots, weapons tables, and optional chart overlays. Ported from [Solaris Skunk Werks](https://github.com/sswlib/SSW) (BSD) including template images, pip patterns, and layout coordinates.
 
 **@bt-roster/web** -- React 19 SPA with shadcn/ui components and Tailwind CSS dark theme. Roster generation, collections management, mech browsing with detail views.
 
@@ -227,7 +238,7 @@ npm -w @bt-roster/web test
 npm -w @bt-roster/core run test:watch
 ```
 
-133 tests total. Tests use [Vitest](https://vitest.dev/).
+167 tests total. Tests use [Vitest](https://vitest.dev/).
 
 ### Tech Stack
 
@@ -238,6 +249,7 @@ npm -w @bt-roster/core run test:watch
 - **React 19** -- Web UI framework.
 - **Vite 8** -- Web build tool with CORS proxy for development.
 - **shadcn/ui** -- Component library (Radix primitives + Tailwind CSS).
+- **jsPDF** -- PDF generation for record sheets.
 - **Vitest** -- Test runner across all packages.
 
 ## Data Source
