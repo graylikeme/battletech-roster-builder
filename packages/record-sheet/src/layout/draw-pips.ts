@@ -103,7 +103,7 @@ function drawPipImage(
     // so we translate by (2*startX - w) to position it correctly.
     // SSW's convention: startX is the RIGHT edge for mirrored images,
     // so the image spans from (startX - w) to startX.
-    doc.internal.write(
+    (doc.internal as any).write(
       `${-1} 0 0 1 ${(2 * px).toFixed(4)} 0 cm`,
     );
     doc.addImage(imageData, 'PNG', region.x, region.y, region.w, region.h, alias, 'FAST');

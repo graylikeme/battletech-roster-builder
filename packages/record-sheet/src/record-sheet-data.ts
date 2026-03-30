@@ -120,13 +120,6 @@ const FIXED_HEAD: CritSlot[] = [
   { name: 'Life Support', isCritable: false },
 ];
 
-const FIXED_ARM_PREFIX: CritSlot[] = [
-  { name: 'Shoulder', isCritable: false },
-  { name: 'Upper Arm Actuator', isCritable: false },
-  { name: 'Lower Arm Actuator', isCritable: false },
-  { name: 'Hand Actuator', isCritable: false },
-];
-
 const FIXED_LEG: CritSlot[] = [
   { name: 'Hip', isCritable: false },
   { name: 'Upper Leg Actuator', isCritable: false },

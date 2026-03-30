@@ -26,7 +26,7 @@ export function beginPageMargin(doc: jsPDF): void {
   const ty = (CANVAS.height * (1 - s) - PAGE_MARGIN) * k;
 
   doc.saveGraphicsState();
-  doc.internal.write(`${s.toFixed(6)} 0 0 ${s.toFixed(6)} ${tx.toFixed(4)} ${ty.toFixed(4)} cm`);
+  (doc.internal as any).write(`${s.toFixed(6)} 0 0 ${s.toFixed(6)} ${tx.toFixed(4)} ${ty.toFixed(4)} cm`);
 }
 
 /**
@@ -48,7 +48,7 @@ export function beginChartScale(doc: jsPDF): void {
   const ty = CANVAS.height * k * (1 - CHART_SCALE);
 
   doc.saveGraphicsState();
-  doc.internal.write(`${CHART_SCALE} 0 0 ${CHART_SCALE} 0 ${ty.toFixed(4)} cm`);
+  (doc.internal as any).write(`${CHART_SCALE} 0 0 ${CHART_SCALE} 0 ${ty.toFixed(4)} cm`);
 }
 
 /**
